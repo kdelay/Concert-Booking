@@ -113,6 +113,7 @@ sequenceDiagram
     actor 사용자
     사용자 ->>+ 좌석 예약: 예약 요청
     Note over 사용자, 좌석 예약: 날짜, 좌석 정보
+    좌석 예약 ->> 좌석 예약: 좌석 임시 배정(LOCK)
     좌석 예약 -->>- 사용자: 좌석 임시 배정 완료
     Note over 사용자, 좌석 예약: 결제 정보, 임시 배정 유효 시간
     Note over 사용자: lock

@@ -1,4 +1,3 @@
-### 토큰 발급 API
 ```mermaid
 sequenceDiagram
     autonumber
@@ -48,9 +47,9 @@ sequenceDiagram
     actor 사용자
     사용자 ->>+ 좌석 예약: 예약 요청
     Note over 사용자, 좌석 예약: 날짜, 좌석 정보
+    좌석 예약 ->> 좌석 예약: 좌석 임시 배정(LOCK)
     좌석 예약 -->>- 사용자: 좌석 임시 배정 완료
     Note over 사용자, 좌석 예약: 결제 정보, 임시 배정 유효 시간
-    Note over 사용자: lock
 ```
 
 ### 결제, 잔액 충전/조회 API
@@ -61,7 +60,7 @@ sequenceDiagram
     사용자 ->>+ 결제: 결제 요청
     Note over 사용자, 결제: 결제 정보, 좌석 배정 번호
     결제 ->>+ 좌석 예약: 임시 배정 체크
-  Note over 결제, 좌석 예약: 좌석 배정 번호
+    Note over 결제, 좌석 예약: 좌석 배정 번호
     좌석 예약 -->>- 결제: 임시 배정 여부
     break 좌석 임시 배정 안됨 (or 만료 5분)
         결제 -->> 사용자: 임시 배정 안됨
