@@ -54,8 +54,12 @@
 - 유저간 대기열을 요청 순서대로 정확하게 제공할 방법을 고민해 봅니다.
 - 동시에 여러 사용자가 예약 요청을 했을 때, 좌석이 중복으로 배정 가능하지 않도록 합니다.
 
-### 💠 Mock API
-
+### 💠 API
+- `Endpoint` - API 의 URL 및 기능을 설명할 수 있는 적절한 HTTP Method
+- `Request` - Param, Query, Body 등 API 호출 시 전달되어야 할 매개변수 및 데이터
+- `Response` - API 의 응답 코드, 데이터 등에 대한 명세 및 적절한 예제
+- `Error` - API 호출 중 발생할 수 있는 예외 케이스에 대해 명시
+- `Authorization` - 필요한 인증, 권한에 대해서도 명시
 ---
 
 ## 📆 Milestone
@@ -72,7 +76,7 @@ sequenceDiagram
     대기열 -->>- 사용자: 토큰, 대기열 정보
 ```
 ### 대기열 검증
-> 아래 모든 API는 해당 검증을 통과한 후 진행된다.
+> 조회, 충전 제외 모든 API는 해당 검증을 통과한 후 진행된다.
 ```mermaid
 sequenceDiagram
     autonumber
@@ -86,6 +90,7 @@ sequenceDiagram
     서비스 -->>- 사용자: API Response
 ```
 ### 날짜 조회 API
+> 대기열 검증 필요
 ```mermaid
 sequenceDiagram
     autonumber
@@ -95,6 +100,7 @@ sequenceDiagram
 ```
 
 ### 좌석 조회 API
+> 대기열 검증 필요
 ```mermaid
 sequenceDiagram
     autonumber
@@ -107,6 +113,7 @@ sequenceDiagram
 ```
 
 ### 좌석 예약 API
+> 대기열 검증 필요
 ```mermaid
 sequenceDiagram
     autonumber
@@ -116,10 +123,10 @@ sequenceDiagram
     좌석 예약 ->> 좌석 예약: 좌석 임시 배정(LOCK)
     좌석 예약 -->>- 사용자: 좌석 임시 배정 완료
     Note over 사용자, 좌석 예약: 결제 정보, 임시 배정 유효 시간
-    Note over 사용자: lock
 ```
 
-### 결제, 잔액 충전/조회 API
+### 결제 API
+> 대기열 검증 필요
 ```mermaid
 sequenceDiagram
     autonumber
@@ -127,7 +134,7 @@ sequenceDiagram
     사용자 ->>+ 결제: 결제 요청
     Note over 사용자, 결제: 결제 정보, 좌석 배정 번호
     결제 ->>+ 좌석 예약: 임시 배정 체크
-  Note over 결제, 좌석 예약: 좌석 배정 번호
+    Note over 결제, 좌석 예약: 좌석 배정 번호
     좌석 예약 -->>- 결제: 임시 배정 여부
     break 좌석 임시 배정 안됨 (or 만료 5분)
         결제 -->> 사용자: 임시 배정 안됨
@@ -148,4 +155,40 @@ sequenceDiagram
         잔액 충전/조회 -->>- 결제: 잔액 부족
         결제 -->>- 사용자: 잔액 부족
     end
+```
+
+### 잔액 조회 API
+```mermaid
+sequenceDiagram
+    autonumber
+    actor 사용자
+    
+    사용자 ->>+ 잔액 조회: 잔액 조회 요청
+    Note over 사용자, 잔액 조회: 사용자 식별자(토큰)
+
+    break 사용자 식별자(토큰)이 없는 경우
+      잔액 조회 -->> 사용자: 잔액 충전 실패
+    end
+  
+    잔액 조회 -->>- 사용자: 잔액 반환
+```
+
+### 잔액 충전 API
+```mermaid
+sequenceDiagram
+    autonumber
+    actor 사용자
+    
+    사용자 ->>+ 잔액 충전: 잔액 충전 요청
+    Note over 사용자, 잔액 충전: 사용자 식별자(토큰), 충전할 금액
+
+    break 사용자 식별자(토큰)이 없는 경우
+        잔액 충전 -->> 사용자: 잔액 충전 실패
+    end
+    
+    break 충전할 금액이 없는 경우
+        잔액 충전 -->> 사용자: 잔액 충전 실패
+    end
+    
+    잔액 충전 -->>- 사용자: 잔액 반환
 ```
