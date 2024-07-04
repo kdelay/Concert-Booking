@@ -73,6 +73,7 @@
 ---
 
 ## 📆 Milestone
+![image](https://github.com/kdelay/Concert-Booking/assets/90545043/dfc79bae-82fc-4c7f-b9c8-21c051061093)
 
 
 ## 📊 ERD Diagram
