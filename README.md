@@ -203,3 +203,58 @@ sequenceDiagram
         결제 -->>- 사용자: 잔액 부족
     end
 ```
+
+# Tree
+```text
+src
+    ├── main
+    │   ├── java
+    │   │   └── concert
+    │   │       └── booking
+    │   │           ├── BookingApplication.java
+    │   │           ├── concert
+    │   │           │   ├── domain
+    │   │           │   │   ├── repository
+    │   │           │   │   │   └── ConcertRepository.java
+    │   │           │   │   └── service
+    │   │           │   │       └── ConcertService.java
+    │   │           │   ├── infrastructure
+    │   │           │   │   ├── entity
+    │   │           │   │   ├── impl
+    │   │           │   │   └── jpa
+    │   │           │   └── presentation
+    │   │           │       └── controller
+    │   │           ├── reservation
+    │   │           │   ├── domain
+    │   │           │   │   ├── repository
+    │   │           │   │   │   └── ReservationRepository.java
+    │   │           │   │   └── service
+    │   │           │   │       └── ReservationService.java
+    │   │           │   ├── infrastructure
+    │   │           │   │   ├── entity
+    │   │           │   │   ├── impl
+    │   │           │   │   └── jpa
+    │   │           │   └── presentation
+    │   │           │       └── controller
+    │   │           └── waiting
+    │   │               ├── domain
+    │   │               │   ├── repository
+    │   │               │   │   └── WaitingRepository.java
+    │   │               │   └── service
+    │   │               │       └── WaitingService.java
+    │   │               ├── infrastructure
+    │   │               │   ├── entity
+    │   │               │   ├── impl
+    │   │               │   └── jpa
+    │   │               └── presentation
+    │   │                   └── controller
+    │   └── resources
+    │       ├── application.properties
+    │       ├── static
+    │       └── templates
+    └── test
+        └── java
+            └── concert
+                └── booking
+                    └── BookingApplicationTests.java
+```
