@@ -54,12 +54,22 @@
 - 유저간 대기열을 요청 순서대로 정확하게 제공할 방법을 고민해 봅니다.
 - 동시에 여러 사용자가 예약 요청을 했을 때, 좌석이 중복으로 배정 가능하지 않도록 합니다.
 
-### 💠 API
+### 💠 API 명세
 - `Endpoint` - API 의 URL 및 기능을 설명할 수 있는 적절한 HTTP Method
 - `Request` - Param, Query, Body 등 API 호출 시 전달되어야 할 매개변수 및 데이터
 - `Response` - API 의 응답 코드, 데이터 등에 대한 명세 및 적절한 예제
 - `Error` - API 호출 중 발생할 수 있는 예외 케이스에 대해 명시
 - `Authorization` - 필요한 인증, 권한에 대해서도 명시
+
+| 항목   | API          | EndPoint                  | Header                  | Request                                                                                                                                         | Response                                                    | Error                                                                                 | Authorization
+|------|--------------|---------------------------|--------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------|---------------------------------------------------------------------------------------|--------------|
+| 설명   | 유저 대기열 토큰 기능 | `POST` /concert/waiting/token | Content-Type: application/json | `/concert/waiting/token`<br>{<br> "userId": 1 <br> "concertId": 1<br>}<br><br>`userId`: <Long, body> 유저 ID <br>`concertId`: <Long, body> 콘서트 ID | SUCCESS<br>{<br> "accessToken": "xxxx.yyyyy.zzzzz"<br>}<br> | <br>ERROR <br>{<br> "statusCode": 500, <br> "messages": ["대기열에 진입할 수 없습니다."]<br>}<br> |-    
+|      | 예약 가능 날짜     | `GET` /concert/schedule/{concertId} |  Content-Type: application/json | `/concert/schedule/1`<br>`concertId`: <Long, path> 콘서트 ID<br>| SUCCESS<br>{<br>"concertDate":"2024-07-05"<br>}             | ERROR<br>{<br>"statusCode":500,<br>"messages":[대기열에 진입할 수 없습니다."]<br>}|token
+|      | 예약 가능 좌석     | `GET` /concert/seats/{concertId} |  Content-Type: application/json | `/concert/seats/1`<br>{<br>"concertDate": "2024-07-05"<br>}<br>`concertId`: <Long, path> 콘서트 ID|SUCCESS<br>{<br>"seatNumber":1<br>}|ERROR<br>{<br>"statusCode":500,<br>"messages":[대기열에 진입할 수 없습니다."]<br>}|token
+|      | 좌석 예약 요청     | `POST` /concert/seats/booking |  Content-Type: application/json | `/concert/seats/booking`<br>{<br>"concertDate": "2024-07-05"<br>"concertSeatId": 1<br>} | SUCCESS<br>{<br>"reservationStatus": "RESERVING"<br>}|ERROR<br>{<br>"statusCode":500,<br>"messages":[대기열에 진입할 수 없습니다."]<br>}|token
+|      | 잔액 충전        | `POST` /payment/charge | Content-Type: application/json | `/payment/charge/1`<br>{<br>"userId": 1,<br>"payment": 2000<br>}|SUCCESS<br>{<br>"payment": 2000<br>}|ERROR<br>{<br>"statusCode":500,<br>"messages":["사용자를 찾을 수 없습니다."]<br>}<br><br>{<br>"statusCode":500,<br>"messages"["충전할 금액이 없습니다."]<br>}|-
+|      | 잔액 조회        | `GET` /payment/{userId} | - | `/payment/1`<br>`userId`: <Long, path> 유저 ID | SUCCESS<br>{<br>"payment": 2000<br>}|ERROR<br>{<br>"statusCode":500,<br>"messages":["사용자를 찾을 수 없습니다."]<br>}<br>|-
+|      | 결제           | `POST` /payment | Content-Type: application/json | `/concert/seats/payment`<br>{<br>"concertSeatId": 1,<br>"reservationId": 1<br>} | SUCCESS<br>{<br>"seatNumber":1<br>} | ERROR<br>{<br>"statusCode":500,<br>"messages":[대기열에 진입할 수 없습니다."]<br>}<br><br>ERROR<br>{<br>"statusCode":500,<br>"messages":[좌석 임시 배정에 실패하였습니다."]<br>}<br><br>ERROR<br>{<br>"statusCode":500,<br>"messages":[잔액이 없습니다."]<br>}|token
 ---
 
 ## 📆 Milestone
@@ -192,4 +202,59 @@ sequenceDiagram
         잔액 조회 -->>- 결제: 잔액 부족
         결제 -->>- 사용자: 잔액 부족
     end
+```
+
+# Tree
+```text
+src
+    ├── main
+    │   ├── java
+    │   │   └── concert
+    │   │       └── booking
+    │   │           ├── BookingApplication.java
+    │   │           ├── concert
+    │   │           │   ├── domain
+    │   │           │   │   ├── repository
+    │   │           │   │   │   └── ConcertRepository.java
+    │   │           │   │   └── service
+    │   │           │   │       └── ConcertService.java
+    │   │           │   ├── infrastructure
+    │   │           │   │   ├── entity
+    │   │           │   │   ├── impl
+    │   │           │   │   └── jpa
+    │   │           │   └── presentation
+    │   │           │       └── controller
+    │   │           ├── reservation
+    │   │           │   ├── domain
+    │   │           │   │   ├── repository
+    │   │           │   │   │   └── ReservationRepository.java
+    │   │           │   │   └── service
+    │   │           │   │       └── ReservationService.java
+    │   │           │   ├── infrastructure
+    │   │           │   │   ├── entity
+    │   │           │   │   ├── impl
+    │   │           │   │   └── jpa
+    │   │           │   └── presentation
+    │   │           │       └── controller
+    │   │           └── waiting
+    │   │               ├── domain
+    │   │               │   ├── repository
+    │   │               │   │   └── WaitingRepository.java
+    │   │               │   └── service
+    │   │               │       └── WaitingService.java
+    │   │               ├── infrastructure
+    │   │               │   ├── entity
+    │   │               │   ├── impl
+    │   │               │   └── jpa
+    │   │               └── presentation
+    │   │                   └── controller
+    │   └── resources
+    │       ├── application.properties
+    │       ├── static
+    │       └── templates
+    └── test
+        └── java
+            └── concert
+                └── booking
+                    └── BookingApplicationTests.java
 ```
