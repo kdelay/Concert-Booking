@@ -20,7 +20,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(controllers = ConcertController.class)
-class ConcertControllerTest {
+class ConcertEntityControllerTest {
 
     @Autowired
     MockMvc mockMvc;
