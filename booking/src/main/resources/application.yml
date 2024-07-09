@@ -1,0 +1,14 @@
+spring:
+  datasource:
+    url: "jdbc:mysql://localhost:3306/concert_booking?useSSL=false&serverTimezone=UTC&NON_KEYWORDS=USER"
+    username: "root"
+    password: "1234"
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create
+    properties:
+      hibernate:
+        show_sql: true
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
