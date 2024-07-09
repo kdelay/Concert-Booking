@@ -1,4 +1,4 @@
-package booking.payment.presentation.response;
+package booking.balance.presentation.response;
 
 public record SearchPaymentResponse(
         int payment
