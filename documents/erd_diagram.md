@@ -3,6 +3,7 @@ erDiagram
 %% 사용자
     user {
         bigint id PK "유저 PK"
+        decimal amount "잔액"
     }
 
 %% 대기열 토큰 정보
@@ -73,27 +74,9 @@ erDiagram
         timestamp modified_at "콘서트 결제 상태 변경 시간"
     }
 
-%% 잔액
-%% balance(1) : balance_history(N)
-    balance {
-        bigint id PK "잔액 PK"
-        bigint user_id FK "유저 PK"
-        decimal amount "잔액"
-    }
-
-%% 잔액 히스토리
-    balance_history {
-        bigint id PK "잔액 히스토리 PK"
-        bigint user_id FK "유저 PK"
-        decimal amount "잔액"
-        timestamp created_at "생성 날짜"
-        timestamp modified_at "수정 날짜"
-    }
-
     user ||--|{ waiting_token : has
     concert ||--|{ concert_schedule : contains
     concert_schedule ||--|{ concert_seat : contains
     reservation ||--o| payment : has
-    balance ||--|{ balance_history : contains
 
 ```
