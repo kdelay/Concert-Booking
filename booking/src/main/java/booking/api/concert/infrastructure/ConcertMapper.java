@@ -3,6 +3,7 @@ package booking.api.concert.infrastructure;
 import booking.api.concert.domain.Concert;
 import booking.api.concert.domain.ConcertSchedule;
 import booking.api.concert.domain.ConcertSeat;
+import booking.api.concert.domain.Reservation;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -61,6 +62,24 @@ public class ConcertMapper {
                 .id(concert.getId())
                 .name(concert.getName())
                 .host(concert.getHost())
+                .build();
+    }
+
+    public static Reservation reservationToDomain(ReservationEntity entity) {
+        return Reservation.create(entity.getId(), entity.getConcertSeatId(), entity.getUserId(), entity.getConcertName(),
+                entity.getConcertDate(), entity.getReservationStatus(), entity.getCreatedAt(), entity.getModifiedAt());
+    }
+
+    public static ReservationEntity reservationToEntity(Reservation reservation) {
+        return ReservationEntity.builder()
+                .id(reservation.getId())
+                .concertSeatId(reservation.getConcertSeatId())
+                .userId(reservation.getUserId())
+                .concertName(reservation.getConcertName())
+                .concertDate(reservation.getConcertDate())
+                .reservationStatus(reservation.getReservationStatus())
+                .createdAt(reservation.getCreatedAt())
+                .modifiedAt(reservation.getModifiedAt())
                 .build();
     }
 }

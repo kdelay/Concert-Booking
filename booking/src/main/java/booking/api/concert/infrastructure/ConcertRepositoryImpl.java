@@ -63,6 +63,6 @@ public class ConcertRepositoryImpl implements ConcertRepository {
 
     @Override
     public Reservation saveReservation(Reservation reservation) {
-        return jpaReservationRepository.save(reservation);
+        return ConcertMapper.reservationToDomain(jpaReservationRepository.save(ConcertMapper.reservationToEntity(reservation)));
     }
 }

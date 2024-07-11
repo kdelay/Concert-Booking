@@ -1,19 +1,23 @@
-package booking.api.concert.presentation;
+package booking.api.waiting.presentation;
 
-import booking.api.concert.presentation.request.ChargeRequest;
-import booking.api.concert.presentation.response.ChargeResponse;
-import booking.api.concert.presentation.response.SearchAmountResponse;
+import booking.api.waiting.domain.User;
+import booking.api.waiting.domain.UserService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 
 @RestController
 @RequestMapping("/user/amount")
+@RequiredArgsConstructor
 public class UserController {
 
-    @PostMapping("/charge/{userId}")
+    private final UserService userService;
+
+    @PatchMapping("/charge/{userId}")
     public ChargeResponse charge(@PathVariable Long userId, @RequestBody ChargeRequest request) {
-        return new ChargeResponse(BigDecimal.valueOf(2000));
+        User user = userService.charge(userId, request.amount());
+        return new ChargeResponse(user.getAmount());
     }
 
     @GetMapping("/{userId}")
