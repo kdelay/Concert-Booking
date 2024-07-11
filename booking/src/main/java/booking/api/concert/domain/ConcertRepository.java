@@ -1,5 +1,6 @@
 package booking.api.concert.domain;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public interface ConcertRepository {
@@ -8,5 +9,9 @@ public interface ConcertRepository {
 
     List<ConcertSchedule> findByConcertEntity(Concert concert);
 
+    ConcertSchedule findByScheduleIdAndConcertDate(Long concertScheduleId, LocalDate concertDate);
+
     ConcertSeat findBySeatId(Long concertSeatId);
+
+    List<ConcertSeat> findByConcertAndSchedule(Concert concert, ConcertSchedule concertSchedule);
 }

@@ -9,6 +9,8 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+import static booking.api.concert.domain.enums.ConcertSeatStatus.AVAILABLE;
+
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -46,5 +48,27 @@ public class ConcertService {
             idList.add(schedule.getId());
         }
         return idList;
+    }
+
+    public List<List<Object>> searchSeats(String token, long concertScheduleId, LocalDate concertDate) {
+
+        //대기열 토큰 검증
+        WaitingToken.tokenAuthorization(token);
+
+        //콘서트 날짜
+        ConcertSchedule concertSchedule = concertRepository.findByScheduleIdAndConcertDate(concertScheduleId, concertDate);
+
+        //콘서트 좌석
+        List<List<Object>> seats = new ArrayList<>();
+        List<ConcertSeat> concertSeats = concertRepository.findByConcertAndSchedule(concertSchedule.getConcert(), concertSchedule)
+                .stream().filter(seat -> seat.getSeatStatus() == AVAILABLE).toList();
+        for (ConcertSeat concertSeat : concertSeats) {
+            List<Object> seatInfo = new ArrayList<>();
+            seatInfo.add(concertSeat.getSeatNumber());
+            seatInfo.add(concertSeat.getSeatPrice());
+            seatInfo.add(concertSeat.getSeatStatus().name());
+            seats.add(seatInfo);
+        }
+        return seats;
     }
 }

@@ -5,6 +5,7 @@ import booking.api.concert.presentation.request.BookingSeatsRequest;
 import booking.api.concert.presentation.response.BookingSeatsResponse;
 import booking.api.concert.presentation.response.SearchScheduleResponse;
 import booking.api.concert.presentation.response.SearchSeatsResponse;
+import jakarta.websocket.server.PathParam;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,7 +13,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
-import static booking.api.concert.domain.enums.ConcertSeatStatus.TEMPORARY;
 import static booking.api.concert.domain.enums.ReservationStatus.RESERVING;
 
 @RequiredArgsConstructor
@@ -31,9 +31,13 @@ public class ConcertController {
         return new SearchScheduleResponse(dates, idList);
     }
 
-    @GetMapping("/seats/{concertId}/{concertScheduleId}")
-    public SearchSeatsResponse searchSeats(@PathVariable Long concertId, @PathVariable long concertScheduleId) {
-        return new SearchSeatsResponse(1, BigDecimal.valueOf(1), TEMPORARY);
+    @GetMapping("/seats/{concertScheduleId}")
+    public List<SearchSeatsResponse> searchSeats(
+            @RequestHeader(value = "Authorization", required = false) String token,
+            @PathVariable long concertScheduleId, @PathParam("concertDate") LocalDate concertDate
+    ) {
+        List<List<Object>> seatsInfo = concertService.searchSeats(token, concertScheduleId, concertDate);
+        return SearchSeatsResponse.of(seatsInfo);
     }
 
     @PostMapping("/seats/booking")

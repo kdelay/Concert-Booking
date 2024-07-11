@@ -46,6 +46,12 @@ public class ConcertMapper {
                 .build();
     }
 
+    public static List<ConcertSeat> seatToDomainList(List<ConcertSeatEntity> entities) {
+        return entities.stream()
+                .map(ConcertMapper::seatToDomain)
+                .collect(Collectors.toList());
+    }
+
     public static Concert toDomain(ConcertEntity entity) {
         return Concert.create(entity.getId(), entity.getName(), entity.getHost());
     }

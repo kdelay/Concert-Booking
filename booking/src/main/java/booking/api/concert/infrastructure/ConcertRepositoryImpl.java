@@ -8,6 +8,7 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Repository
@@ -30,9 +31,23 @@ public class ConcertRepositoryImpl implements ConcertRepository {
         );
     }
     @Override
+    public ConcertSchedule findByScheduleIdAndConcertDate(Long concertScheduleId, LocalDate concertDate) {
+        return ConcertMapper.scheduleToDomain(jpaConcertScheduleRepository.findByIdAndConcertDate(concertScheduleId, concertDate));
+    }
+
+    @Override
     public ConcertSeat findBySeatId(Long concertSeatId) {
         return ConcertMapper.seatToDomain(
                 jpaConcertSeatRepository.findById(concertSeatId).orElseThrow(() -> new EntityNotFoundException("해당하는 좌석이 없습니다."))
         );
     }
+
+    @Override
+    public List<ConcertSeat> findByConcertAndSchedule(Concert concert, ConcertSchedule concertSchedule) {
+        return ConcertMapper.seatToDomainList(
+                jpaConcertSeatRepository.findByConcertEntityAndConcertScheduleEntity(
+                ConcertMapper.toEntity(concert), ConcertMapper.scheduleToEntity(concertSchedule))
+        );
+    }
+
 }
