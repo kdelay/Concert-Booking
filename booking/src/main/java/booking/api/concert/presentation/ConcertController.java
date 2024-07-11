@@ -1,6 +1,6 @@
 package booking.api.concert.presentation;
 
-import booking.api.concert.domain.enums.ReservationStatus;
+import booking.api.concert.domain.ConcertService;
 import booking.api.concert.presentation.request.BookingSeatsRequest;
 import booking.api.concert.presentation.response.BookingSeatsResponse;
 import booking.api.concert.presentation.response.SearchScheduleResponse;
@@ -10,18 +10,25 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 import static booking.api.concert.domain.enums.ConcertSeatStatus.TEMPORARY;
-import static booking.api.concert.domain.enums.ReservationStatus.*;
+import static booking.api.concert.domain.enums.ReservationStatus.RESERVING;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/concerts")
+@RequestMapping("/concert")
 public class ConcertController {
 
+    private final ConcertService concertService;
+
     @GetMapping("/schedules/{concertId}")
-    public SearchScheduleResponse searchSchedule(@PathVariable Long concertId) {
-        return new SearchScheduleResponse(LocalDate.of(2024,7,5), 1);
+    public SearchScheduleResponse searchSchedules(
+            @RequestHeader(value = "Authorization", required = false) String token, @PathVariable Long concertId
+    ) {
+        List<LocalDate> dates = concertService.searchSchedules(token, concertId);
+        List<Long> idList = concertService.getConcertScheduleId(concertId);
+        return new SearchScheduleResponse(dates, idList);
     }
 
     @GetMapping("/seats/{concertId}/{concertScheduleId}")

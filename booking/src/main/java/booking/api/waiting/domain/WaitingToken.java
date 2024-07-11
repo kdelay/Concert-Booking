@@ -1,5 +1,6 @@
 package booking.api.waiting.domain;
 
+import booking.common.exception.AuthorizationException;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
@@ -60,5 +61,9 @@ public class WaitingToken {
 
     public void updateTokenActivate() {
         this.waitingTokenStatus = ACTIVATE;
+    }
+
+    public static void tokenAuthorization(String token) {
+        if (token == null || token.isEmpty()) throw new AuthorizationException("토큰 인증에 실패했습니다.");
     }
 }

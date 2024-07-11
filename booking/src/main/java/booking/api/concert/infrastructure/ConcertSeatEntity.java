@@ -31,7 +31,6 @@ public class ConcertSeatEntity {
     @Comment("콘서트 날짜 PK")
     private ConcertScheduleEntity concertScheduleEntity;
 
-    @Column(nullable = false)
     @Comment("유저 PK")
     private Long userId;
 
