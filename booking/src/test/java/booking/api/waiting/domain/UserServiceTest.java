@@ -47,4 +47,19 @@ class UserServiceTest {
         User chargeUser = userService.charge(userId, amount);
         assertThat(chargeUser.getAmount()).isEqualTo(BigDecimal.valueOf(500));
     }
+
+    @Test
+    @DisplayName("잔액 조회")
+    void searchAmount() {
+
+        Long userId = 1L;
+        BigDecimal amount = BigDecimal.valueOf(500);
+        User user = User.create(userId, amount);
+
+        when(waitingTokenRepository.findByUserId(userId)).thenReturn(user);
+
+        User selectUser = userService.searchAmount(userId);
+
+        assertThat(selectUser.getAmount()).isEqualTo(amount);
+    }
 }

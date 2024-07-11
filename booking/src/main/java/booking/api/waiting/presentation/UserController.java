@@ -5,8 +5,6 @@ import booking.api.waiting.domain.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
-import java.math.BigDecimal;
-
 @RestController
 @RequestMapping("/user/amount")
 @RequiredArgsConstructor
@@ -22,6 +20,7 @@ public class UserController {
 
     @GetMapping("/{userId}")
     public SearchAmountResponse searchAmount(@PathVariable Long userId) {
-        return new SearchAmountResponse(BigDecimal.valueOf(2000));
+        User user = userService.searchAmount(userId);
+        return new SearchAmountResponse(user.getAmount());
     }
 }

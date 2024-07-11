@@ -22,4 +22,8 @@ public class UserService {
 
         return user.chargeAmount(amount);
     }
+
+    public User searchAmount(Long userId) {
+        return waitingTokenRepository.findByUserId(userId);
+    }
 }

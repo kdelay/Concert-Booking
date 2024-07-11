@@ -14,9 +14,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.math.BigDecimal;
 
 import static org.mockito.BDDMockito.given;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(UserController.class)
 class UserControllerTest {
@@ -51,6 +51,16 @@ class UserControllerTest {
     }
 
     @Test
-    void searchAmount() {
+    @DisplayName("GET /user/amount/{userId} 잔액 조회")
+    void searchAmount() throws Exception {
+
+        Long userId = 1L;
+        BigDecimal amount = BigDecimal.valueOf(500);
+        User user = User.create(userId, amount);
+        given(userService.searchAmount(userId)).willReturn(user);
+
+        mockMvc.perform(get("/user/amount/{userId}", userId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.amount").value(amount));
     }
 }
