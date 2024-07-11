@@ -3,11 +3,13 @@ package booking.api.waiting.infrastructure;
 import booking.api.waiting.domain.WaitingTokenStatus;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Comment;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 @Entity @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -36,4 +38,34 @@ public class WaitingTokenEntity {
 
     @Comment("상태 변경 시간")
     private LocalDateTime modifiedAt;
+
+    @Builder
+    public WaitingTokenEntity(
+            Long id,
+            UserEntity userEntity,
+            String token,
+            WaitingTokenStatus waitingTokenStatus,
+            LocalDateTime createdAt,
+            LocalDateTime modifiedAt
+    ) {
+        this.id = id;
+        this.userEntity = userEntity;
+        this.token = token;
+        this.waitingTokenStatus = waitingTokenStatus;
+        this.createdAt = createdAt;
+        this.modifiedAt = modifiedAt;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        WaitingTokenEntity waitingTokenEntity = (WaitingTokenEntity) o;
+        return Objects.equals(id, waitingTokenEntity.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
 }

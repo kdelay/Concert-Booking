@@ -2,9 +2,12 @@ package booking.api.concert.infrastructure;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Comment;
+
+import java.util.Objects;
 
 @Entity @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -23,8 +26,23 @@ public class ConcertEntity {
     @Comment("콘서트 주최자")
     private String host;
 
-    public ConcertEntity(String name, String host) {
+    @Builder
+    public ConcertEntity(Long id, String name, String host) {
+        this.id = id;
         this.name = name;
         this.host = host;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ConcertEntity concertEntity = (ConcertEntity) o;
+        return Objects.equals(id, concertEntity.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 }

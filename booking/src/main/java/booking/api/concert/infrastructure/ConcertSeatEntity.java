@@ -3,12 +3,14 @@ package booking.api.concert.infrastructure;
 import booking.api.concert.domain.enums.ConcertSeatStatus;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Comment;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 @Entity @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -50,4 +52,40 @@ public class ConcertSeatEntity {
 
     @Comment("좌석 임시 배정 만료 시간")
     private LocalDateTime expiredAt;
+
+    @Builder
+    public ConcertSeatEntity(
+        Long id,
+        ConcertEntity concertEntity,
+        ConcertScheduleEntity concertScheduleEntity,
+        Long userId,
+        int seatNumber,
+        BigDecimal seatPrice,
+        ConcertSeatStatus seatStatus,
+        LocalDateTime modifiedAt,
+        LocalDateTime expiredAt
+    ) {
+        this.id = id;
+        this.concertEntity = concertEntity;
+        this.concertScheduleEntity = concertScheduleEntity;
+        this.userId = userId;
+        this.seatNumber = seatNumber;
+        this.seatPrice = seatPrice;
+        this.seatStatus = seatStatus;
+        this.modifiedAt = modifiedAt;
+        this.expiredAt = expiredAt;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ConcertSeatEntity concertSeatEntity = (ConcertSeatEntity) o;
+        return Objects.equals(id, concertSeatEntity.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
 }

@@ -3,12 +3,14 @@ package booking.api.concert.infrastructure;
 import booking.api.concert.domain.enums.PaymentState;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Comment;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 @Entity @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -37,4 +39,34 @@ public class PaymentEntity {
 
     @Comment("상태 변경 시간")
     private LocalDateTime modifiedAt;
+
+    @Builder
+    public PaymentEntity(
+        Long id,
+        ReservationEntity reservationEntity,
+        BigDecimal price,
+        PaymentState paymentState,
+        LocalDateTime createdAt,
+        LocalDateTime modifiedAt
+    ) {
+        this.id = id;
+        this.reservationEntity = reservationEntity;
+        this.price = price;
+        this.paymentState = paymentState;
+        this.createdAt = createdAt;
+        this.modifiedAt = modifiedAt;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        PaymentEntity paymentEntity = (PaymentEntity) o;
+        return Objects.equals(id, paymentEntity.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
 }
