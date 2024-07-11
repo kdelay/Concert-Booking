@@ -22,6 +22,11 @@ public class WaitingTokenRepositoryImpl implements WaitingTokenRepository {
     }
 
     @Override
+    public WaitingToken findByToken(String token) {
+        return WaitingTokenMapper.toDomain(jpaWaitingTokenRepository.findByToken(token).orElseThrow(() -> new IllegalArgumentException("토큰이 없습니다.")));
+    }
+
+    @Override
     public WaitingToken save(WaitingToken waitingToken) {
         return WaitingTokenMapper.toDomain(
                 jpaWaitingTokenRepository.save(WaitingTokenMapper.toEntity(waitingToken))

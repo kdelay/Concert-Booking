@@ -6,6 +6,8 @@ public interface WaitingTokenRepository {
 
     User findByUserId(Long userId);
 
+    WaitingToken findByToken(String token);
+
     WaitingToken save(WaitingToken waitingToken);
 
     Long findActivateTokenSortedByIdDesc();

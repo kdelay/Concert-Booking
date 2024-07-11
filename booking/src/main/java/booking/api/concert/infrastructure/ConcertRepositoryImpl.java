@@ -1,9 +1,6 @@
 package booking.api.concert.infrastructure;
 
-import booking.api.concert.domain.Concert;
-import booking.api.concert.domain.ConcertRepository;
-import booking.api.concert.domain.ConcertSchedule;
-import booking.api.concert.domain.ConcertSeat;
+import booking.api.concert.domain.*;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -18,6 +15,7 @@ public class ConcertRepositoryImpl implements ConcertRepository {
     private final JpaConcertRepository jpaConcertRepository;
     private final JpaConcertScheduleRepository jpaConcertScheduleRepository;
     private final JpaConcertSeatRepository jpaConcertSeatRepository;
+    private final JpaReservationRepository jpaReservationRepository;
 
     @Override
     public Concert findByConcertId(Long concertId) {
@@ -50,4 +48,21 @@ public class ConcertRepositoryImpl implements ConcertRepository {
         );
     }
 
+    @Override
+    public ConcertSeat findByConcertAndScheduleAndSeatNumber(Long concertId, Long concertScheduleId, int seatNumber) {
+        return ConcertMapper.seatToDomain(
+                jpaConcertSeatRepository.findByConcertAndScheduleAndSeatNumber(
+                        concertId, concertScheduleId, seatNumber)
+        );
+    }
+
+    @Override
+    public ConcertSeat saveConcertSeat(ConcertSeat concertSeat) {
+        return ConcertMapper.seatToDomain(jpaConcertSeatRepository.save(ConcertMapper.seatToEntity(concertSeat)));
+    }
+
+    @Override
+    public Reservation saveReservation(Reservation reservation) {
+        return jpaReservationRepository.save(reservation);
+    }
 }

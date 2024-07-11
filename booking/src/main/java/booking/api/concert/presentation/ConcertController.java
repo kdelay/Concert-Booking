@@ -1,6 +1,7 @@
 package booking.api.concert.presentation;
 
 import booking.api.concert.domain.ConcertService;
+import booking.api.concert.domain.Reservation;
 import booking.api.concert.presentation.request.BookingSeatsRequest;
 import booking.api.concert.presentation.response.BookingSeatsResponse;
 import booking.api.concert.presentation.response.SearchScheduleResponse;
@@ -12,8 +13,6 @@ import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
-
-import static booking.api.concert.domain.enums.ReservationStatus.RESERVING;
 
 @RequiredArgsConstructor
 @RestController
@@ -41,7 +40,12 @@ public class ConcertController {
     }
 
     @PostMapping("/seats/booking")
-    public BookingSeatsResponse bookingSeats(@RequestBody BookingSeatsRequest request) {
-        return new BookingSeatsResponse(1, 1, 1, BigDecimal.valueOf(1), RESERVING);
+    public BookingSeatsResponse bookingSeats(
+            @RequestHeader(value = "Authorization", required = false) String token,
+            @RequestBody BookingSeatsRequest request
+    ) {
+        Reservation reservation = concertService.bookingSeats(token, request.userId(), request.concertScheduleId(), request.concertDate(), request.seatNumberList());
+        List<BigDecimal> price = concertService.getConcertSeat(request.userId(), reservation.getConcertSeatId(), request.concertDate(), request.seatNumberList());
+        return new BookingSeatsResponse(reservation.getId(), reservation.getConcertSeatId(), request.seatNumberList(), price);
     }
 }

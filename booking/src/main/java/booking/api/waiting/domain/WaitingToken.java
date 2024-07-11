@@ -66,4 +66,8 @@ public class WaitingToken {
     public static void tokenAuthorization(String token) {
         if (token == null || token.isEmpty()) throw new AuthorizationException("토큰 인증에 실패했습니다.");
     }
+
+    public void updateWaitingTokenStatus(WaitingTokenStatus waitingTokenStatus) {
+        this.waitingTokenStatus = waitingTokenStatus;
+    }
 }

@@ -14,7 +14,7 @@ public class ConcertSeatDummy {
         List<ConcertSeat> list = new ArrayList<>();
 
         for (ConcertSchedule schedule : schedules) {
-            for (int i = 1; i <= 50; i++) {
+            for (int i = 1; i <= 10; i++) {
                 list.add(ConcertSeat.create((long) i, concert, schedule, null, i, BigDecimal.valueOf(1000), AVAILABLE, LocalDateTime.now(), null));
             }
         }

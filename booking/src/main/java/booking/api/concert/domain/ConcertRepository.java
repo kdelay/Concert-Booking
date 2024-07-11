@@ -14,4 +14,10 @@ public interface ConcertRepository {
     ConcertSeat findBySeatId(Long concertSeatId);
 
     List<ConcertSeat> findByConcertAndSchedule(Concert concert, ConcertSchedule concertSchedule);
+
+    ConcertSeat findByConcertAndScheduleAndSeatNumber(Long concertId, Long concertScheduleId, int seatNumber);
+
+    ConcertSeat saveConcertSeat(ConcertSeat concertSeat);
+
+    Reservation saveReservation(Reservation reservation);
 }

@@ -15,7 +15,7 @@ public class ConcertSeat {
     private final Long userId;
     private final int seatNumber;
     private final BigDecimal seatPrice;
-    private final ConcertSeatStatus seatStatus;
+    private ConcertSeatStatus seatStatus;
     private final LocalDateTime modifiedAt;
     private final LocalDateTime expiredAt;
 
@@ -33,5 +33,9 @@ public class ConcertSeat {
 
     public static ConcertSeat create(Long id, Concert concert, ConcertSchedule concertSchedule, Long userId, int seatNumber, BigDecimal seatPrice, ConcertSeatStatus seatStatus, LocalDateTime modifiedAt, LocalDateTime expiredAt) {
         return new ConcertSeat(id, concert, concertSchedule, userId, seatNumber, seatPrice, seatStatus, modifiedAt, expiredAt);
+    }
+
+    public void updateSeatStatus(ConcertSeatStatus seatStatus) {
+        this.seatStatus = seatStatus;
     }
 }

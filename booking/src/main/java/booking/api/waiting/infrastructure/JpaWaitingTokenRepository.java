@@ -14,4 +14,6 @@ public interface JpaWaitingTokenRepository extends JpaRepository<WaitingTokenEnt
     @Query("select wt from WaitingTokenEntity wt where wt.userEntity.id = :userId " +
             "and wt.waitingTokenStatus <> 'EXPIRED' order by wt.createdAt desc")
     Optional<WaitingTokenEntity> findUsingTokenByUserId(@Param("userId") Long userId);
+
+    Optional<WaitingTokenEntity> findByToken(String token);
 }
