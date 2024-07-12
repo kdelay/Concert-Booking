@@ -3,6 +3,7 @@ package booking.api.concert.domain;
 import booking.api.concert.domain.enums.ReservationStatus;
 import lombok.Getter;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -17,6 +18,7 @@ public class Reservation {
     private ReservationStatus reservationStatus;
     private final LocalDateTime createdAt;
     private final LocalDateTime modifiedAt;
+    private BigDecimal totalAmount;
 
     public Reservation(Long id, Long concertSeatId, Long userId, String concertName, LocalDate concertDate, ReservationStatus reservationStatus, LocalDateTime createdAt, LocalDateTime modifiedAt) {
         this.id = id;

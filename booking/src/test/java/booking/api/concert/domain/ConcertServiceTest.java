@@ -1,7 +1,12 @@
 package booking.api.concert.domain;
 
+import booking.api.concert.Payment;
+import booking.api.concert.domain.enums.ConcertSeatStatus;
+import booking.api.concert.domain.enums.ReservationStatus;
+import booking.api.waiting.domain.User;
 import booking.api.waiting.domain.WaitingToken;
 import booking.api.waiting.domain.WaitingTokenDummy;
+import booking.api.waiting.domain.WaitingTokenRepository;
 import booking.common.exception.AuthorizationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -22,10 +27,10 @@ import static booking.api.concert.domain.enums.ConcertSeatStatus.TEMPORARY;
 import static booking.api.concert.domain.enums.ReservationStatus.RESERVING;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class ConcertServiceTest {
@@ -35,6 +40,9 @@ class ConcertServiceTest {
 
     @Mock
     ConcertRepository concertRepository;
+
+    @Mock
+    WaitingTokenRepository waitingTokenRepository;
 
     private Concert concert;
     private List<ConcertSchedule> concertScheduleList;
@@ -208,10 +216,48 @@ class ConcertServiceTest {
         }
     }
 
+
     @Test
-    @DisplayName("시간 안에 예약 상태가 RESERVED 로 변경되지 않으면 토큰 만료")
-    void expiredToken() {
+    @DisplayName("예약 만료 시간이 지났을 경우")
+    void expiredReservation() {
 
+        String token = "valid_token";
+        Long concertSeatId = 1L;
+        Long reservationId = 1L;
+        Long userId = 1L;
 
+        Reservation reservation = Reservation.create(reservationId, concertSeatId, userId, "A 콘서트", LocalDate.parse("2024-07-10"),
+                RESERVING, LocalDateTime.now().minusSeconds(10), null);
+
+        given(concertRepository.findByReservationId(reservationId)).willReturn(reservation);
+
+        assertThrows(RuntimeException.class, () -> {
+            concertService.pay(token, concertSeatId, reservationId);
+        });
+    }
+
+    @Test
+    @DisplayName("결제 성공")
+    void paySuccess() {
+
+        String token = "valid_token";
+        Long concertSeatId = 1L;
+        Long reservationId = 1L;
+        Long userId = 1L;
+
+        Reservation reservation = Reservation.create(reservationId, concertSeatId, userId, "A 콘서트", LocalDate.parse("2024-07-10"),
+                ReservationStatus.RESERVING, LocalDateTime.now(), null);
+        when(concertRepository.findByReservationId(reservationId)).thenReturn(reservation);
+
+        ConcertSeat concertSeat = new ConcertSeat(concertSeatId, concert, concertScheduleList.get(0), userId, 1,
+                BigDecimal.valueOf(100), ConcertSeatStatus.AVAILABLE, LocalDateTime.now(), null);
+        when(concertRepository.findBySeatId(concertSeatId)).thenReturn(concertSeat);
+
+        User user = User.create(userId, BigDecimal.valueOf(500));
+        when(waitingTokenRepository.findByUserId(userId)).thenReturn(user);
+
+        ConcertSeat result = concertService.pay(token, concertSeatId, reservationId);
+
+        assertEquals(ConcertSeatStatus.RESERVED, result.getSeatStatus());
     }
 }

@@ -1,5 +1,8 @@
 package booking.api.concert.domain;
 
+import booking.api.concert.Payment;
+import booking.api.concert.domain.enums.ConcertSeatStatus;
+import booking.api.waiting.domain.User;
 import booking.api.waiting.domain.WaitingToken;
 import booking.api.waiting.domain.WaitingTokenRepository;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +18,7 @@ import java.util.List;
 
 import static booking.api.concert.domain.enums.ConcertSeatStatus.AVAILABLE;
 import static booking.api.concert.domain.enums.ConcertSeatStatus.TEMPORARY;
+import static booking.api.concert.domain.enums.PaymentState.COMPLETED;
 import static booking.api.concert.domain.enums.ReservationStatus.RESERVED;
 import static booking.api.concert.domain.enums.ReservationStatus.RESERVING;
 import static booking.api.waiting.domain.WaitingTokenStatus.EXPIRED;
@@ -142,5 +146,51 @@ public class ConcertService {
             price.add(seat.getSeatPrice());
         }
         return price;
+    }
+
+    public ConcertSeat pay(String token, Long concertSeatId, Long reservationId) {
+
+        //대기열 토큰 검증
+        WaitingToken.tokenAuthorization(token);
+
+        //예약 정보 가져오기
+        Reservation reservation = concertRepository.findByReservationId(reservationId);
+
+        //예약 만료 시간 확인
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime expiryTime = reservation.getCreatedAt().plusSeconds(10); //예약 만료 시간(예시: 10초)
+
+        if (now.isAfter(expiryTime)) {
+            throw new RuntimeException("Reservation expired");
+        }
+
+        //유저 잔액 확인 및 결제 처리
+        Long userId = reservation.getUserId();
+        User user = waitingTokenRepository.findByUserId(userId);
+        BigDecimal totalAmount = reservation.getTotalAmount();
+        BigDecimal userAmount = user.getAmount();
+
+        if (userAmount.compareTo(totalAmount) < 0) {
+            throw new IllegalStateException("잔액이 부족합니다.");
+        }
+
+        //결제 처리
+        user.chargeAmount(totalAmount.negate()); //유저 잔액에서 결제 금액 차감
+        waitingTokenRepository.saveUser(user);
+
+        //Payment 추가
+        Payment payment = Payment.create(null, reservation, totalAmount, COMPLETED, LocalDateTime.now(), LocalDateTime.now());
+        concertRepository.savePayment(payment);
+
+        //ConcertSeat 상태 변경
+        ConcertSeat concertSeat = concertRepository.findBySeatId(concertSeatId);
+        concertSeat.updateSeatStatus(ConcertSeatStatus.RESERVED); //예약된 상태로 변경
+        concertRepository.saveConcertSeat(concertSeat);
+
+        //Reservation 상태 변경
+        reservation.updateReservationStatus(RESERVED); //예약된 상태로 변경
+        concertRepository.saveReservation(reservation);
+
+        return concertSeat;
     }
 }

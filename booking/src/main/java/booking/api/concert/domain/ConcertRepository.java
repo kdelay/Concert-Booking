@@ -1,5 +1,7 @@
 package booking.api.concert.domain;
 
+import booking.api.concert.Payment;
+
 import java.time.LocalDate;
 import java.util.List;
 
@@ -19,5 +21,9 @@ public interface ConcertRepository {
 
     ConcertSeat saveConcertSeat(ConcertSeat concertSeat);
 
+    Reservation findByReservationId(Long reservationId);
+
     Reservation saveReservation(Reservation reservation);
+
+    Payment savePayment(Payment payment);
 }

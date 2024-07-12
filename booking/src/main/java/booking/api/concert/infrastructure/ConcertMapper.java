@@ -1,5 +1,6 @@
 package booking.api.concert.infrastructure;
 
+import booking.api.concert.Payment;
 import booking.api.concert.domain.Concert;
 import booking.api.concert.domain.ConcertSchedule;
 import booking.api.concert.domain.ConcertSeat;
@@ -80,6 +81,22 @@ public class ConcertMapper {
                 .reservationStatus(reservation.getReservationStatus())
                 .createdAt(reservation.getCreatedAt())
                 .modifiedAt(reservation.getModifiedAt())
+                .build();
+    }
+
+    public static Payment paymentToDomain(PaymentEntity entity) {
+        return Payment.create(entity.getId(), ConcertMapper.reservationToDomain(entity.getReservationEntity()), entity.getPrice(),
+                entity.getPaymentState(), entity.getCreatedAt(), entity.getModifiedAt());
+    }
+
+    public static PaymentEntity paymentToEntity(Payment payment) {
+        return PaymentEntity.builder()
+                .id(payment.getId())
+                .reservationEntity(ConcertMapper.reservationToEntity(payment.getReservation()))
+                .price(payment.getPrice())
+                .paymentState(payment.getPaymentState())
+                .createdAt(payment.getCreatedAt())
+                .modifiedAt(payment.getModifiedAt())
                 .build();
     }
 }

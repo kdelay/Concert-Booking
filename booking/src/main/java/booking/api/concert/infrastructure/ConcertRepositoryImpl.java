@@ -1,5 +1,6 @@
 package booking.api.concert.infrastructure;
 
+import booking.api.concert.Payment;
 import booking.api.concert.domain.*;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +17,7 @@ public class ConcertRepositoryImpl implements ConcertRepository {
     private final JpaConcertScheduleRepository jpaConcertScheduleRepository;
     private final JpaConcertSeatRepository jpaConcertSeatRepository;
     private final JpaReservationRepository jpaReservationRepository;
+    private final JpaPaymentRepository jpaPaymentRepository;
 
     @Override
     public Concert findByConcertId(Long concertId) {
@@ -62,7 +64,17 @@ public class ConcertRepositoryImpl implements ConcertRepository {
     }
 
     @Override
+    public Reservation findByReservationId(Long reservationId) {
+        return ConcertMapper.reservationToDomain(jpaReservationRepository.findById(reservationId).orElseThrow(() -> new EntityNotFoundException("해당하는 예약이 없습니다.")));
+    }
+
+    @Override
     public Reservation saveReservation(Reservation reservation) {
         return ConcertMapper.reservationToDomain(jpaReservationRepository.save(ConcertMapper.reservationToEntity(reservation)));
+    }
+
+    @Override
+    public Payment savePayment(Payment payment) {
+        return ConcertMapper.paymentToDomain(jpaPaymentRepository.save(ConcertMapper.paymentToEntity(payment)));
     }
 }

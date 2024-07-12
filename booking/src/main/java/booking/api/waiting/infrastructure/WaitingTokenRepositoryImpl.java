@@ -1,5 +1,6 @@
 package booking.api.waiting.infrastructure;
 
+import booking.api.concert.infrastructure.ConcertMapper;
 import booking.api.waiting.domain.User;
 import booking.api.waiting.domain.WaitingToken;
 import booking.api.waiting.domain.WaitingTokenRepository;
@@ -19,6 +20,11 @@ public class WaitingTokenRepositoryImpl implements WaitingTokenRepository {
         return WaitingTokenMapper.userToDomain(
                 jpaUserRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("User - userId not found"))
         );
+    }
+
+    @Override
+    public User saveUser(User user) {
+        return WaitingTokenMapper.userToDomain(jpaUserRepository.save(WaitingTokenMapper.userToEntity(user)));
     }
 
     @Override
