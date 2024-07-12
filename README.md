@@ -60,17 +60,8 @@
 - `Response` - API 의 응답 코드, 데이터 등에 대한 명세 및 적절한 예제
 - `Error` - API 호출 중 발생할 수 있는 예외 케이스에 대해 명시
 - `Authorization` - 필요한 인증, 권한에 대해서도 명시
+![image](https://github.com/user-attachments/assets/bc001b4d-f9cb-4b15-aa33-0041923f53fd)
 
-| 항목   | API          | EndPoint                  | Header                  | Request                                                                                                                                         | Response                                                    | Error                                                                                 | Authorization
-|------|--------------|---------------------------|--------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------|---------------------------------------------------------------------------------------|--------------|
-| 설명   | 유저 대기열 토큰 기능 | `POST` /concert/waiting/token | Content-Type: application/json | `/concert/waiting/token`<br>{<br> "userId": 1 <br> "concertId": 1<br>}<br><br>`userId`: <Long, body> 유저 ID <br>`concertId`: <Long, body> 콘서트 ID | SUCCESS<br>{<br> "accessToken": "xxxx.yyyyy.zzzzz"<br>}<br> | <br>ERROR <br>{<br> "statusCode": 500, <br> "messages": ["대기열에 진입할 수 없습니다."]<br>}<br> |-    
-|      | 예약 가능 날짜     | `GET` /concert/schedule/{concertId} |  Content-Type: application/json | `/concert/schedule/1`<br>`concertId`: <Long, path> 콘서트 ID<br>| SUCCESS<br>{<br>"concertDate":"2024-07-05"<br>}             | ERROR<br>{<br>"statusCode":500,<br>"messages":[대기열에 진입할 수 없습니다."]<br>}|token
-|      | 예약 가능 좌석     | `GET` /concert/seats/{concertId} |  Content-Type: application/json | `/concert/seats/1`<br>{<br>"concertDate": "2024-07-05"<br>}<br>`concertId`: <Long, path> 콘서트 ID|SUCCESS<br>{<br>"seatNumber":1<br>}|ERROR<br>{<br>"statusCode":500,<br>"messages":[대기열에 진입할 수 없습니다."]<br>}|token
-|      | 좌석 예약 요청     | `POST` /concert/seats/booking |  Content-Type: application/json | `/concert/seats/booking`<br>{<br>"concertDate": "2024-07-05"<br>"concertSeatId": 1<br>} | SUCCESS<br>{<br>"reservationStatus": "RESERVING"<br>}|ERROR<br>{<br>"statusCode":500,<br>"messages":[대기열에 진입할 수 없습니다."]<br>}|token
-|      | 잔액 충전        | `POST` /payment/charge | Content-Type: application/json | `/payment/charge/1`<br>{<br>"userId": 1,<br>"payment": 2000<br>}|SUCCESS<br>{<br>"payment": 2000<br>}|ERROR<br>{<br>"statusCode":500,<br>"messages":["사용자를 찾을 수 없습니다."]<br>}<br><br>{<br>"statusCode":500,<br>"messages"["충전할 금액이 없습니다."]<br>}|-
-|      | 잔액 조회        | `GET` /payment/{userId} | - | `/payment/1`<br>`userId`: <Long, path> 유저 ID | SUCCESS<br>{<br>"payment": 2000<br>}|ERROR<br>{<br>"statusCode":500,<br>"messages":["사용자를 찾을 수 없습니다."]<br>}<br>|-
-|      | 결제           | `POST` /payment | Content-Type: application/json | `/concert/seats/payment`<br>{<br>"concertSeatId": 1,<br>"reservationId": 1<br>} | SUCCESS<br>{<br>"seatNumber":1<br>} | ERROR<br>{<br>"statusCode":500,<br>"messages":[대기열에 진입할 수 없습니다."]<br>}<br><br>ERROR<br>{<br>"statusCode":500,<br>"messages":[좌석 임시 배정에 실패하였습니다."]<br>}<br><br>ERROR<br>{<br>"statusCode":500,<br>"messages":[잔액이 없습니다."]<br>}|token
----
 
 ## 📆 Milestone
 ![image](https://github.com/kdelay/Concert-Booking/assets/90545043/dfc79bae-82fc-4c7f-b9c8-21c051061093)
@@ -293,77 +284,100 @@ sequenceDiagram
     │   ├── java
     │   │   └── booking
     │   │       ├── BookingApplication.java
-    │   │       ├── concert
-    │   │       │   ├── domain
-    │   │       │   │   ├── repository
-    │   │       │   │   │   └── ConcertRepository.java
-    │   │       │   │   └── service
-    │   │       │   │       └── ConcertService.java
-    │   │       │   ├── infrastructure
-    │   │       │   │   ├── entity
-    │   │       │   │   ├── impl
-    │   │       │   │   └── jpa
-    │   │       │   └── presentation
-    │   │       │       ├── controller
-    │   │       │       │   └── ConcertController.java
-    │   │       │       ├── request
-    │   │       │       │   ├── BookingSeatsRequest.java
-    │   │       │       │   └── WaitingTokenRequest.java
-    │   │       │       └── response
-    │   │       │           ├── BookingSeatsResponse.java
-    │   │       │           ├── SearchScheduleResponse.java
-    │   │       │           ├── SearchSeatsResponse.java
-    │   │       │           └── WaitingTokenResponse.java
-    │   │       ├── payment
-    │   │       │   ├── domain
-    │   │       │   │   ├── repository
-    │   │       │   │   └── service
-    │   │       │   ├── infrastructure
-    │   │       │   │   ├── entity
-    │   │       │   │   ├── impl
-    │   │       │   │   └── jpa
-    │   │       │   └── presentation
-    │   │       │       ├── controller
-    │   │       │       │   └── PaymentController.java
-    │   │       │       ├── request
-    │   │       │       │   ├── ChargeRequest.java
-    │   │       │       │   └── PayRequest.java
-    │   │       │       └── response
+    │   │       ├── api
+    │   │       │   ├── concert
+    │   │       │   │   ├── Payment.java
+    │   │       │   │   ├── domain
+    │   │       │   │   │   ├── Concert.java
+    │   │       │   │   │   ├── ConcertRepository.java
+    │   │       │   │   │   ├── ConcertSchedule.java
+    │   │       │   │   │   ├── ConcertSeat.java
+    │   │       │   │   │   ├── ConcertService.java
+    │   │       │   │   │   ├── Reservation.java
+    │   │       │   │   │   └── enums
+    │   │       │   │   │       ├── ConcertSeatStatus.java
+    │   │       │   │   │       ├── PaymentState.java
+    │   │       │   │   │       └── ReservationStatus.java
+    │   │       │   │   ├── infrastructure
+    │   │       │   │   │   ├── ConcertEntity.java
+    │   │       │   │   │   ├── ConcertMapper.java
+    │   │       │   │   │   ├── ConcertRepositoryImpl.java
+    │   │       │   │   │   ├── ConcertScheduleEntity.java
+    │   │       │   │   │   ├── ConcertSeatEntity.java
+    │   │       │   │   │   ├── JpaConcertRepository.java
+    │   │       │   │   │   ├── JpaConcertScheduleRepository.java
+    │   │       │   │   │   ├── JpaConcertSeatRepository.java
+    │   │       │   │   │   ├── JpaPaymentRepository.java
+    │   │       │   │   │   ├── JpaReservationRepository.java
+    │   │       │   │   │   ├── PaymentEntity.java
+    │   │       │   │   │   └── ReservationEntity.java
+    │   │       │   │   └── presentation
+    │   │       │   │       ├── ConcertController.java
+    │   │       │   │       ├── PaymentController.java
+    │   │       │   │       ├── request
+    │   │       │   │       │   ├── BookingSeatsRequest.java
+    │   │       │   │       │   └── PayRequest.java
+    │   │       │   │       └── response
+    │   │       │   │           ├── BookingSeatsResponse.java
+    │   │       │   │           ├── PayResponse.java
+    │   │       │   │           ├── SearchPaymentResponse.java
+    │   │       │   │           ├── SearchScheduleResponse.java
+    │   │       │   │           └── SearchSeatsResponse.java
+    │   │       │   └── waiting
+    │   │       │       ├── domain
+    │   │       │       │   ├── User.java
+    │   │       │       │   ├── UserService.java
+    │   │       │       │   ├── WaitingToken.java
+    │   │       │       │   ├── WaitingTokenRepository.java
+    │   │       │       │   ├── WaitingTokenService.java
+    │   │       │       │   └── WaitingTokenStatus.java
+    │   │       │       ├── infrastructure
+    │   │       │       │   ├── JpaUserRepository.java
+    │   │       │       │   ├── JpaWaitingTokenRepository.java
+    │   │       │       │   ├── UserEntity.java
+    │   │       │       │   ├── UserMapper.java
+    │   │       │       │   ├── WaitingTokenEntity.java
+    │   │       │       │   ├── WaitingTokenMapper.java
+    │   │       │       │   └── WaitingTokenRepositoryImpl.java
+    │   │       │       └── presentation
+    │   │       │           ├── ChargeRequest.java
     │   │       │           ├── ChargeResponse.java
-    │   │       │           ├── PayResponse.java
-    │   │       │           └── SearchPaymentResponse.java
-    │   │       ├── reservation
-    │   │       │   ├── domain
-    │   │       │   │   ├── ReservationStatus.java
-    │   │       │   │   ├── repository
-    │   │       │   │   │   └── ReservationRepository.java
-    │   │       │   │   └── service
-    │   │       │   │       └── ReservationService.java
-    │   │       │   ├── infrastructure
-    │   │       │   │   ├── entity
-    │   │       │   │   ├── impl
-    │   │       │   │   └── jpa
-    │   │       │   └── presentation
-    │   │       │       └── controller
-    │   │       └── waiting
-    │   │           ├── domain
-    │   │           │   ├── repository
-    │   │           │   │   └── WaitingRepository.java
-    │   │           │   └── service
-    │   │           │       └── WaitingService.java
-    │   │           ├── infrastructure
-    │   │           │   ├── entity
-    │   │           │   ├── impl
-    │   │           │   └── jpa
-    │   │           └── presentation
-    │   │               └── controller
+    │   │       │           ├── SearchAmountResponse.java
+    │   │       │           ├── UserController.java
+    │   │       │           ├── WaitingTokenController.java
+    │   │       │           ├── WaitingTokenRequest.java
+    │   │       │           └── WaitingTokenResponse.java
+    │   │       └── common
+    │   │           ├── exception
+    │   │           │   ├── AuthorizationException.java
+    │   │           │   ├── BaseException.java
+    │   │           │   └── Exception.java
+    │   │           └── handler
+    │   │               ├── ApiControllerAdvice.java
+    │   │               └── ErrorResponse.java
     │   └── resources
     │       ├── application.properties
+    │       ├── application.yml
     │       ├── static
     │       └── templates
     └── test
         └── java
             └── booking
-                └── BookingApplicationTests.java
-
+                ├── BookingApplicationTests.java
+                └── api
+                    ├── concert
+                    │   ├── domain
+                    │   │   ├── ConcertSeatDummy.java
+                    │   │   └── ConcertServiceTest.java
+                    │   └── presentation
+                    │       └── ConcertControllerTest.java
+                    └── waiting
+                        ├── domain
+                        │   ├── UserDummy.java
+                        │   ├── UserServiceTest.java
+                        │   ├── WaitingTokenDummy.java
+                        │   └── WaitingTokenServiceTest.java
+                        └── presentation
+                            ├── UserControllerTest.java
+                            └── WaitingTokenControllerTest.java
 ```
