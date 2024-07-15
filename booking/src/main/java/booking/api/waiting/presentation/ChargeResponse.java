@@ -1,4 +1,4 @@
-package booking.api.concert.presentation.response;
+package booking.api.waiting.presentation;
 
 import java.math.BigDecimal;
 
