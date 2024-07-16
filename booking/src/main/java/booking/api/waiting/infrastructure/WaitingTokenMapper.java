@@ -17,7 +17,7 @@ public class WaitingTokenMapper {
     }
 
     public static WaitingToken toDomain(WaitingTokenEntity entity) {
-        return WaitingToken.create(
+        return new WaitingToken(
                 entity.getId(),
                 UserMapper.toDomain(entity.getUserEntity()),
                 entity.getToken(),

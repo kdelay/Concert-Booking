@@ -1,12 +1,13 @@
 package booking.api.waiting.infrastructure;
 
-import booking.api.concert.infrastructure.ConcertMapper;
 import booking.api.waiting.domain.User;
 import booking.api.waiting.domain.WaitingToken;
 import booking.api.waiting.domain.WaitingTokenRepository;
-import jakarta.persistence.EntityNotFoundException;
+import booking.common.exception.CustomNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
+
+import static booking.common.exception.ErrorCode.USER_IS_NOT_FOUND;
 
 @Repository
 @RequiredArgsConstructor
@@ -18,7 +19,9 @@ public class WaitingTokenRepositoryImpl implements WaitingTokenRepository {
     @Override
     public User findByUserId(Long userId) {
         return WaitingTokenMapper.userToDomain(
-                jpaUserRepository.findById(userId).orElseThrow(() -> new EntityNotFoundException("User - userId not found"))
+                jpaUserRepository.findById(userId)
+                        .orElseThrow(() -> new CustomNotFoundException(USER_IS_NOT_FOUND,
+                                "해당하는 유저가 없습니다. [userId : %d]".formatted(userId)))
         );
     }
 
@@ -46,8 +49,8 @@ public class WaitingTokenRepositoryImpl implements WaitingTokenRepository {
 
     @Override
     public WaitingToken findUsingTokenByUserId(Long userId) {
-        return WaitingTokenMapper.toDomain(
-                jpaWaitingTokenRepository.findUsingTokenByUserId(userId).orElseThrow(() -> new EntityNotFoundException("WaitingToken - userId not found"))
-        );
+        WaitingTokenEntity waitingTokenEntity = jpaWaitingTokenRepository.findUsingTokenByUserId(userId).orElse(null);
+        if (waitingTokenEntity == null) return null;
+        return WaitingTokenMapper.toDomain(waitingTokenEntity);
     }
 }

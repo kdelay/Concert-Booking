@@ -1,13 +1,13 @@
 package booking.api.concert.domain;
 
-import booking.api.concert.Payment;
 import booking.api.concert.domain.enums.ConcertSeatStatus;
 import booking.api.concert.domain.enums.ReservationStatus;
 import booking.api.waiting.domain.User;
 import booking.api.waiting.domain.WaitingToken;
-import booking.api.waiting.domain.WaitingTokenDummy;
 import booking.api.waiting.domain.WaitingTokenRepository;
 import booking.common.exception.AuthorizationException;
+import booking.dummy.ConcertSeatDummy;
+import booking.dummy.WaitingTokenDummy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -30,7 +30,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class ConcertServiceTest {

@@ -1,4 +1,8 @@
-package booking.api.concert.domain;
+package booking.dummy;
+
+import booking.api.concert.domain.Concert;
+import booking.api.concert.domain.ConcertSchedule;
+import booking.api.concert.domain.ConcertSeat;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

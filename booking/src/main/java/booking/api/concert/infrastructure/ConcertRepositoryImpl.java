@@ -2,12 +2,15 @@ package booking.api.concert.infrastructure;
 
 import booking.api.concert.Payment;
 import booking.api.concert.domain.*;
+import booking.common.exception.CustomNotFoundException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.List;
+
+import static booking.common.exception.ErrorCode.CONCERT_IS_NOT_FOUND;
 
 @Repository
 @RequiredArgsConstructor
@@ -21,7 +24,10 @@ public class ConcertRepositoryImpl implements ConcertRepository {
 
     @Override
     public Concert findByConcertId(Long concertId) {
-        return ConcertMapper.toDomain(jpaConcertRepository.findById(concertId).orElseThrow(() -> new EntityNotFoundException("해당하는 콘서트가 없습니다.")));
+        return ConcertMapper.toDomain(jpaConcertRepository.findById(concertId)
+                .orElseThrow(() -> new CustomNotFoundException(CONCERT_IS_NOT_FOUND,
+                        "해당하는 콘서트가 없습니다. [concertId : %d]".formatted(concertId)))
+        );
     }
 
     @Override

@@ -1,10 +1,9 @@
 package booking.api.waiting.presentation;
 
+import booking.api.waiting.application.WaitingTokenFacade;
 import booking.api.waiting.domain.User;
 import booking.api.waiting.domain.WaitingToken;
-import booking.api.waiting.domain.WaitingTokenService;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,9 +18,8 @@ import java.util.UUID;
 
 import static booking.api.waiting.domain.WaitingTokenStatus.DEACTIVATE;
 import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(WaitingTokenController.class)
@@ -34,53 +32,33 @@ class WaitingTokenControllerTest {
     ObjectMapper objectMapper;
 
     @MockBean
-    WaitingTokenService waitingTokenService;
-
-    private User user;
-
-    @BeforeEach
-    void setUp() {
-        //유저 기본 세팅
-        user = User.create(1L, BigDecimal.ZERO);
-    }
+    WaitingTokenFacade waitingTokenFacade;
 
     @Test
-    @DisplayName("POST /waiting/token 유저 대기열 토큰 발급")
-    void issue() throws Exception {
+    @DisplayName("POST /waiting/token 발급 및 조회 API 테스트")
+    void testIssueTokenOrSearchWaiting() throws Exception {
 
-        Long userId = 1L;
-        Long concertId = 1L;
-        Long waitingTokenId = 1L;
+        long userId = 1L;
+        long concertId = 1L;
+
         String token = UUID.randomUUID().toString();
-        LocalDateTime localDateTime = LocalDateTime.now();
+        WaitingTokenRequest request = new WaitingTokenRequest(userId, concertId);
 
-        WaitingToken waitingToken = WaitingToken.create(waitingTokenId, user, token, DEACTIVATE, localDateTime, localDateTime);
-        given(waitingTokenService.issue(token, userId, concertId)).willReturn(waitingToken);
+        User user = new User(userId, BigDecimal.ZERO);
+        WaitingToken waitingToken = new WaitingToken(1L, user, token, DEACTIVATE, LocalDateTime.now(), null);
+        given(waitingTokenFacade.issueTokenOrSearchWaiting(token, userId, concertId)).willReturn(waitingToken);
+        given(waitingTokenFacade.getRank(waitingToken.getId())).willReturn(0L);
 
-        WaitingTokenRequest waitingTokenRequest = new WaitingTokenRequest(userId, concertId);
-        String req = objectMapper.writeValueAsString(waitingTokenRequest);
+        String req = objectMapper.writeValueAsString(request);
 
+        //when & then
         mockMvc.perform(post("/waiting/token")
-                        .header("Authorization",token)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(req))
-                .andExpect(status().isOk());
-    }
-
-    @Test
-    @DisplayName("GET /waiting/token/{userId} 유저 대기열 토큰 조회")
-    void search() throws Exception {
-
-        Long userId = 1L;
-        Long waitingTokenId = 1L;
-        String token = UUID.randomUUID().toString();
-        LocalDateTime localDateTime = LocalDateTime.now();
-
-        WaitingToken waitingToken = WaitingToken.create(waitingTokenId, user, token, DEACTIVATE, localDateTime, localDateTime);
-        given(waitingTokenService.search(userId)).willReturn(waitingToken);
-
-        mockMvc.perform(get("/waiting/token/{userId}", userId))
+                        .header("Authorization", token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(req))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+                .andExpect(jsonPath("$.accessToken").value(token))
+                .andExpect(jsonPath("$.status").value("DEACTIVATE"))
+                .andExpect(jsonPath("$.rank").value(1L));
     }
 }
