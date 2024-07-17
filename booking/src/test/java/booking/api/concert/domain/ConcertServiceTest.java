@@ -1,11 +1,11 @@
 package booking.api.concert.domain;
 
+import booking.api.concert.Payment;
 import booking.api.concert.domain.enums.ConcertSeatStatus;
-import booking.api.concert.domain.enums.ReservationStatus;
+import booking.api.concert.domain.enums.PaymentState;
 import booking.api.waiting.domain.User;
 import booking.api.waiting.domain.WaitingToken;
 import booking.api.waiting.domain.WaitingTokenRepository;
-import booking.common.exception.AuthorizationException;
 import booking.common.exception.CustomBadRequestException;
 import booking.common.exception.CustomNotFoundException;
 import booking.dummy.ConcertSeatDummy;
@@ -25,12 +25,12 @@ import java.util.List;
 
 import static booking.api.concert.domain.enums.ConcertSeatStatus.AVAILABLE;
 import static booking.api.concert.domain.enums.ConcertSeatStatus.TEMPORARY;
+import static booking.api.concert.domain.enums.ReservationStatus.CANCELED;
 import static booking.api.concert.domain.enums.ReservationStatus.RESERVING;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.BDDMockito.given;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
@@ -183,97 +183,111 @@ class ConcertServiceTest {
         List<Integer> seatNumberList = List.of(1, 2, 8, 9);
 
         assertThatThrownBy(() -> concertService.bookingSeats(null, 1L, concertScheduleId, concertDate, seatNumberList))
-                .isInstanceOf(AuthorizationException.class)
-                .hasMessage("토큰 인증에 실패했습니다.");
+                .isInstanceOf(CustomNotFoundException.class)
+                .hasMessage("[WAITING_TOKEN_AUTH_FAIL] 토큰 인증에 실패했습니다.");
     }
 
     @Test
     @DisplayName("콘서트 좌석 상태 검증 테스트 - 예약된 좌석 -> 예약 불가")
     void alreadyReservedSeat() {
 
-        long concertScheduleId = 1L;
-        LocalDate concertDate = LocalDate.parse("2024-07-10");
-        WaitingToken waitingToken = WaitingTokenDummy.getWaitingTokenList().get(0);
-        int seatNumber = 1;
-        LocalDateTime now = LocalDateTime.now();
-        List<Integer> seatNumberList = List.of(1, 2, 8, 9);
+        ConcertSchedule concertSchedule = concertScheduleList.get(0);
 
-        ConcertSeat expectedConcertSeat = ConcertSeat.create(1L, concert, concertScheduleList.get(0), 1L, seatNumber, BigDecimal.valueOf(1000), TEMPORARY, now, now);
-        when(concertRepository.findByScheduleIdAndConcertDate(concertScheduleId, concertDate)).thenReturn(concertScheduleList.get(0));
-        when(concertRepository.findByConcertAndScheduleAndSeatNumber(concert.getId(), concertScheduleList.get(0).getId(), seatNumber)).thenReturn(expectedConcertSeat);
+        List<Integer> seatNumberList = List.of(1, 3);
+        List<ConcertSeat> seats = ConcertSeatDummy.getAllSeatReserved(concert, concertScheduleList);
+        List<ConcertSeat> concertSeats = seats.stream()
+                .filter(seat -> seatNumberList.contains(seat.getSeatNumber()))
+                .filter(seat -> seat.getConcert().equals(concert))
+                .filter(seat -> seat.getConcertSchedule().equals(concertSchedule))
+                .toList();
 
-        assertThrows(IllegalStateException.class, () -> {
-            concertService.bookingSeats(waitingToken.getToken(), 1L, concertScheduleId, concertDate, seatNumberList);
-        });
+        when(concertRepository.findByScheduleIdAndConcertDate(anyLong(), any(LocalDate.class))).thenReturn(concertSchedule);
+
+        for (ConcertSeat concertSeat : concertSeats) {
+            when(concertRepository.findByConcertAndScheduleAndSeatNumber(anyLong(), anyLong(), eq(concertSeat.getSeatNumber()))).thenReturn(concertSeat);
+        }
+
+        assertThatThrownBy(() -> concertService.bookingSeats("valid_token", 1L, 1L, LocalDate.now(), seatNumberList))
+                .isInstanceOf(CustomBadRequestException.class)
+                .hasMessage("[CONCERT_SEAT_IS_NOT_AVAILABLE] 이미 예약되거나 임시 배정 중인 좌석입니다.");
     }
 
     @Test
-    @DisplayName("좌석 상태 검증 테스트 - 예약되지 않은 좌석 -> 예약 가능")
+    @DisplayName("콘서트 좌석 상태 검증 테스트 - 예약되지 않은 좌석 -> 예약 가능")
     void validateSeatStatusAvailable() {
 
-        long concertScheduleId = 1L;
-        long userId = 1L;
-        LocalDate concertDate = LocalDate.parse("2024-07-10");
-        WaitingToken waitingToken = WaitingTokenDummy.getWaitingTokenList().get(0);
-        LocalDateTime now = LocalDateTime.now();
+        List<Integer> seatNumberList = List.of(2, 4);
         ConcertSchedule concertSchedule = concertScheduleList.get(0);
-        BigDecimal price = BigDecimal.valueOf(1000);
+        List<ConcertSeat> seats = ConcertSeatDummy.getConcertSeatList(concert, concertScheduleList);
+        List<ConcertSeat> concertSeats = seats.stream()
+                .filter(seat -> seatNumberList.contains(seat.getSeatNumber()))
+                .filter(seat -> seat.getConcert().equals(concert))
+                .filter(seat -> seat.getConcertSchedule().equals(concertSchedule))
+                .toList();
 
-        List<Integer> seatNumberList = List.of(1, 4, 9, 10);
-        List<ConcertSeat> seats = List.of(
-          ConcertSeat.create(1L, concert, concertSchedule, userId, 1, price, AVAILABLE, now, now),
-          ConcertSeat.create(4L, concert, concertSchedule, userId, 4, price, AVAILABLE, now, now),
-          ConcertSeat.create(9L, concert, concertSchedule, userId, 9, price, AVAILABLE, now, now),
-          ConcertSeat.create(10L, concert, concertSchedule, userId, 10, price, AVAILABLE, now, now)
-        );
+        //콘서트 날짜 정보 조회
+        when(concertRepository.findByScheduleIdAndConcertDate(anyLong(), any(LocalDate.class))).thenReturn(concertSchedule);
 
-        when(concertRepository.findByScheduleIdAndConcertDate(concertScheduleId, concertDate)).thenReturn(concertSchedule);
-
-        for (ConcertSeat seat : seats) {
-            when(concertRepository.findByConcertAndScheduleAndSeatNumber(concert.getId(), concertSchedule.getId(), seat.getSeatNumber()))
-                    .thenReturn(seat);
+        //예약하고자 하는 좌석 리스트
+        for (ConcertSeat seat : concertSeats) {
+            when(concertRepository.findByConcertAndScheduleAndSeatNumber(anyLong(), anyLong(), eq(seat.getSeatNumber()))).thenReturn(seat);
         }
 
-        for (ConcertSeat concertSeat : concertSeatList) {
-            concertSeat.updateSeatStatus(TEMPORARY);
-            when(concertRepository.saveConcertSeat(concertSeat)).thenReturn(concertSeat);
+        List<Reservation> reservations = concertService.bookingSeats("valid_token", 1L, 1L, LocalDate.now(), seatNumberList);
+
+        //임시 배정 상태로 변경
+        for (ConcertSeat seat : concertSeats) {
+            seat.updateSeatStatus(TEMPORARY);
         }
 
-        Reservation expectedReservation = new Reservation(1L, concertScheduleId, userId, concert.getName(), concertDate, RESERVING, now, null);
-        given(concertRepository.saveReservation(new Reservation(null, concertScheduleId, userId, concert.getName(), concertDate, RESERVING, LocalDateTime.now(), null))).willReturn(expectedReservation);
-
-        Reservation reservation = concertService.bookingSeats(waitingToken.getToken(), userId, concertScheduleId, concertDate, seatNumberList);
-        System.out.println("reservation = " + reservation);
-
-        assertThat(reservation).isNotNull();
-        assertThat(reservation.getConcertName()).isEqualTo(concert.getName());
-        assertThat(reservation.getConcertDate()).isEqualTo(concertDate);
-        assertThat(reservation.getReservationStatus()).isEqualTo(RESERVING);
-        assertThat(reservation.getCreatedAt()).isNotNull();
-
-        for (ConcertSeat concertSeat : concertSeatList) {
-            assertThat(concertSeat.getSeatStatus()).isEqualTo(TEMPORARY);
-        }
+        assertEquals(2, reservations.size());
+        assertThat(reservations.get(0).getConcertSeatId()).isEqualTo(2);
+        assertThat(reservations.get(1).getConcertSeatId()).isEqualTo(4);
     }
-
 
     @Test
     @DisplayName("예약 만료 시간이 지났을 경우")
-    void expiredReservation() {
+    void checkExpiredTimeForSeat() {
 
-        String token = "valid_token";
-        Long concertSeatId = 1L;
-        Long reservationId = 1L;
-        Long userId = 1L;
+        //현재 시간
+        LocalDateTime now = LocalDateTime.now();
+        //10초 전 생성된 예약
+        LocalDateTime createdAt = now.minusSeconds(10);
 
-        Reservation reservation = Reservation.create(reservationId, concertSeatId, userId, "A 콘서트", LocalDate.parse("2024-07-10"),
-                RESERVING, LocalDateTime.now().minusSeconds(10), null);
+        ConcertSeat concertSeat = concertSeatList.get(0);
+        ConcertSchedule concertSchedule = concertScheduleList.get(0);
 
-        given(concertRepository.findByReservationId(reservationId)).willReturn(reservation);
+        List<Reservation> reservations = List.of(
+            new Reservation(1L, concertSeat.getId(), 1L, concert.getName(), concertSchedule.getConcertDate(),
+                  RESERVING, createdAt, null),
+            new Reservation(1L, concertSeat.getId(), 1L, concert.getName(), concertSchedule.getConcertDate(),
+                RESERVING, createdAt, null)
+        );
+        when(concertRepository.findAllByReservationStatus(RESERVING)).thenReturn(reservations);
 
-        assertThrows(RuntimeException.class, () -> {
-            concertService.pay(token, concertSeatId, reservationId);
-        });
+        Payment payment = null;
+        for (Reservation reservation : reservations) {
+            //예약 취소
+            reservation.updateReservationStatus(CANCELED);
+
+            //결제 취소
+            payment = Payment.create(reservation, BigDecimal.valueOf(1000));
+            lenient().when(concertRepository.findPaymentByReservation(reservation)).thenReturn(payment);
+            payment.updatePaymentStatus(PaymentState.CANCELED);
+
+        }
+        //좌석 임시 배정 취소 -> 예약 가능 상태로 변경
+        concertSeat.updateSeatStatus(AVAILABLE);
+        lenient().when(concertRepository.findBySeatId(concertSeat.getId())).thenReturn(concertSeat);
+
+        //콘서트 좌석 임시 배정 시간 및 예약 만료 시간 체크
+        concertService.checkExpiredTimeForSeat();
+
+        for (Reservation reservation : reservations) {
+            assertEquals(CANCELED, reservation.getReservationStatus());
+            assertEquals(PaymentState.CANCELED, payment.getPaymentState());
+            assertEquals(AVAILABLE, concertSeat.getSeatStatus());
+        }
     }
 
     @Test
@@ -285,8 +299,7 @@ class ConcertServiceTest {
         Long reservationId = 1L;
         Long userId = 1L;
 
-        Reservation reservation = Reservation.create(reservationId, concertSeatId, userId, "A 콘서트", LocalDate.parse("2024-07-10"),
-                ReservationStatus.RESERVING, LocalDateTime.now(), null);
+        Reservation reservation = Reservation.create(concertSeatId, userId, "A 콘서트", LocalDate.parse("2024-07-10"));
         when(concertRepository.findByReservationId(reservationId)).thenReturn(reservation);
 
         ConcertSeat concertSeat = new ConcertSeat(concertSeatId, concert, concertScheduleList.get(0), userId, 1,

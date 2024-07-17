@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface JpaConcertSeatRepository extends JpaRepository<ConcertSeatEntity, Long> {
 
@@ -14,7 +15,7 @@ public interface JpaConcertSeatRepository extends JpaRepository<ConcertSeatEntit
             "where cs.concertEntity.id = :concertId " +
             "and cs.concertScheduleEntity.id = :concertScheduleId " +
             "and cs.seatNumber = :seatNumber")
-    ConcertSeatEntity findByConcertAndScheduleAndSeatNumber(
+    Optional<ConcertSeatEntity> findByConcertAndScheduleAndSeatNumber(
             @Param("concertId") Long concertId,
             @Param("concertScheduleId") Long concertScheduleId,
             @Param("seatNumber") int seatNumber);

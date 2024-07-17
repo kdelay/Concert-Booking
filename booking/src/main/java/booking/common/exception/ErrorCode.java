@@ -17,8 +17,13 @@ public enum ErrorCode {
     //concert
     CONCERT_IS_NOT_FOUND("콘서트가 존재하지 않습니다."),
 
+    //concert schedule
+    CONCERT_SCHEDULE_IS_NOT_FOUND("콘서트 날짜가 존재하지 않습니다."),
+
     //concert seat
-    CONCERT_SEAT_ALL_RESERVED("매진되었습니다.");
+    CONCERT_SEAT_ALL_RESERVED("매진되었습니다."),
+    CONCERT_SEAT_IS_NOT_AVAILABLE("이미 예약되거나 임시 배정 중인 좌석입니다."),
+    CONCERT_SEAT_IS_NOT_FOUND("좌석 번호가 없습니다.");
 
     private final String msg;
 }

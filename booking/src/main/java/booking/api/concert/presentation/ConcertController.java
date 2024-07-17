@@ -2,7 +2,6 @@ package booking.api.concert.presentation;
 
 import booking.api.concert.application.ConcertFacade;
 import booking.api.concert.domain.ConcertSchedule;
-import booking.api.concert.domain.ConcertService;
 import booking.api.concert.domain.Reservation;
 import booking.api.concert.presentation.request.BookingSeatsRequest;
 import booking.api.concert.presentation.response.BookingSeatsResponse;
@@ -12,7 +11,6 @@ import jakarta.websocket.server.PathParam;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -21,7 +19,6 @@ import java.util.List;
 @RequestMapping("/concert")
 public class ConcertController {
 
-    private final ConcertService concertService;
     private final ConcertFacade concertFacade;
 
     @GetMapping("/schedules/{concertId}")
@@ -44,12 +41,11 @@ public class ConcertController {
     }
 
     @PostMapping("/seats/booking")
-    public BookingSeatsResponse bookingSeats(
+    public List<BookingSeatsResponse> bookingSeats(
             @RequestHeader(value = "Authorization", required = false) String token,
             @RequestBody BookingSeatsRequest request
     ) {
-        Reservation reservation = concertService.bookingSeats(token, request.userId(), request.concertScheduleId(), request.concertDate(), request.seatNumberList());
-        List<BigDecimal> price = concertService.getConcertSeat(request.userId(), reservation.getConcertSeatId(), request.concertDate(), request.seatNumberList());
-        return new BookingSeatsResponse(reservation.getId(), reservation.getConcertSeatId(), request.seatNumberList(), price);
+        List<Reservation> reservations = concertFacade.bookingSeats(token, request.userId(), request.concertScheduleId(), request.concertDate(), request.seatNumberList());
+        return BookingSeatsResponse.of(reservations);
     }
 }

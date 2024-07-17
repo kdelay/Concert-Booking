@@ -21,7 +21,7 @@ public class PaymentEntity {
     @Comment("콘서트 결제 PK")
     private Long id;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "reservation_id", referencedColumnName = "id", unique = true)
     @Comment("콘서트 예약 PK")
     private ReservationEntity reservationEntity;

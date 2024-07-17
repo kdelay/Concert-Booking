@@ -31,10 +31,10 @@ public class ConcertSeat {
         this.expiredAt = expiredAt;
     }
 
-    public static ConcertSeat create(Long id, Concert concert, ConcertSchedule concertSchedule, Long userId, int seatNumber, BigDecimal seatPrice, ConcertSeatStatus seatStatus, LocalDateTime modifiedAt, LocalDateTime expiredAt) {
-        return new ConcertSeat(id, concert, concertSchedule, userId, seatNumber, seatPrice, seatStatus, modifiedAt, expiredAt);
-    }
-
+    /**
+     * 좌석 상태 변경
+     * @param seatStatus 상태 (AVAILABLE, TEMPORARY, RESERVED)
+     */
     public void updateSeatStatus(ConcertSeatStatus seatStatus) {
         this.seatStatus = seatStatus;
     }

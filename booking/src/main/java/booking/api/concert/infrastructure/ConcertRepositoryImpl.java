@@ -2,6 +2,7 @@ package booking.api.concert.infrastructure;
 
 import booking.api.concert.Payment;
 import booking.api.concert.domain.*;
+import booking.api.concert.domain.enums.ReservationStatus;
 import booking.common.exception.CustomNotFoundException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -10,7 +11,7 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDate;
 import java.util.List;
 
-import static booking.common.exception.ErrorCode.CONCERT_IS_NOT_FOUND;
+import static booking.common.exception.ErrorCode.*;
 
 @Repository
 @RequiredArgsConstructor
@@ -36,9 +37,16 @@ public class ConcertRepositoryImpl implements ConcertRepository {
                 jpaConcertScheduleRepository.findByConcertEntity(ConcertMapper.toEntity(concert))
         );
     }
+
+    /**
+     * @param concertScheduleId 콘서트 날짜 PK
+     * @param concertDate 콘서트 날짜
+     * @return 콘서트 날짜 정보
+     */
     @Override
     public ConcertSchedule findByScheduleIdAndConcertDate(Long concertScheduleId, LocalDate concertDate) {
-        return ConcertMapper.scheduleToDomain(jpaConcertScheduleRepository.findByIdAndConcertDate(concertScheduleId, concertDate));
+        return ConcertMapper.scheduleToDomain(jpaConcertScheduleRepository.findByIdAndConcertDate(concertScheduleId, concertDate)
+                .orElseThrow(() -> new CustomNotFoundException(CONCERT_SCHEDULE_IS_NOT_FOUND, "[%s] 해당하는 콘서트 날짜를 찾을 수 없습니다.".formatted(concertDate))));
     }
 
     @Override
@@ -56,11 +64,18 @@ public class ConcertRepositoryImpl implements ConcertRepository {
         );
     }
 
+    /**
+     * @param concertId 콘서트 PK
+     * @param concertScheduleId  콘서트 날짜 PK
+     * @param seatNumber 콘서트 좌석 번호
+     * @return 콘서트 좌석 정보
+     */
     @Override
     public ConcertSeat findByConcertAndScheduleAndSeatNumber(Long concertId, Long concertScheduleId, int seatNumber) {
         return ConcertMapper.seatToDomain(
                 jpaConcertSeatRepository.findByConcertAndScheduleAndSeatNumber(
                         concertId, concertScheduleId, seatNumber)
+                        .orElseThrow(() -> new CustomNotFoundException(CONCERT_SEAT_IS_NOT_FOUND, "[%s] 좌석 번호가 없습니다." + seatNumber))
         );
     }
 
@@ -75,8 +90,22 @@ public class ConcertRepositoryImpl implements ConcertRepository {
     }
 
     @Override
+    public List<Reservation> findAllByReservationStatus(ReservationStatus reservationStatus) {
+        return ConcertMapper.reservationToDomainList(jpaReservationRepository.findAllByReservationStatus(reservationStatus));
+    }
+
+    @Override
     public Reservation saveReservation(Reservation reservation) {
         return ConcertMapper.reservationToDomain(jpaReservationRepository.save(ConcertMapper.reservationToEntity(reservation)));
+    }
+
+    /**
+     * @param reservation 예약 객체
+     * @return 결제 객체
+     */
+    @Override
+    public Payment findPaymentByReservation(Reservation reservation) {
+        return ConcertMapper.paymentToDomain(jpaPaymentRepository.findByReservationEntity(reservation));
     }
 
     @Override
