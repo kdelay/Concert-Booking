@@ -1,6 +1,5 @@
 package booking.api.waiting.domain;
 
-import booking.common.exception.AuthorizationException;
 import booking.common.exception.CustomNotFoundException;
 import lombok.Getter;
 
@@ -9,8 +8,7 @@ import java.time.ZoneId;
 import java.util.UUID;
 
 import static booking.api.waiting.domain.WaitingTokenStatus.DEACTIVATE;
-import static booking.common.exception.ErrorCode.USER_IS_NOT_FOUND;
-import static booking.common.exception.ErrorCode.WAITING_TOKEN_IS_NOT_FOUND;
+import static booking.common.exception.ErrorCode.*;
 
 @Getter
 public class WaitingToken {
@@ -73,7 +71,11 @@ public class WaitingToken {
         this.waitingTokenStatus = waitingTokenStatus;
     }
 
+    /**
+     * 토큰이 없는 경우 exception 발생
+     * @param token Auth - Bearer Token
+     */
     public static void tokenAuthorization(String token) {
-        if (token == null || token.isEmpty()) throw new AuthorizationException("토큰 인증에 실패했습니다.");
+        if (token == null || token.isEmpty()) throw new CustomNotFoundException(WAITING_TOKEN_AUTH_FAIL, "토큰 인증에 실패했습니다.");
     }
 }

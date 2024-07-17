@@ -22,7 +22,7 @@ public class WaitingTokenService {
      * @param concertId 콘서트 PK
      * @return 대기열 정보
      */
-    @Transactional(readOnly = true, rollbackFor = {Exception.class})
+    @Transactional(rollbackFor = {Exception.class})
     public WaitingToken issueTokenOrSearchWaiting(String token, Long userId, Long concertId) {
 
         //유저 정보 조회

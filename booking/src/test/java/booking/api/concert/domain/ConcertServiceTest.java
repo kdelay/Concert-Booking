@@ -6,6 +6,8 @@ import booking.api.waiting.domain.User;
 import booking.api.waiting.domain.WaitingToken;
 import booking.api.waiting.domain.WaitingTokenRepository;
 import booking.common.exception.AuthorizationException;
+import booking.common.exception.CustomBadRequestException;
+import booking.common.exception.CustomNotFoundException;
 import booking.dummy.ConcertSeatDummy;
 import booking.dummy.WaitingTokenDummy;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,7 +22,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static booking.api.concert.domain.enums.ConcertSeatStatus.AVAILABLE;
 import static booking.api.concert.domain.enums.ConcertSeatStatus.TEMPORARY;
@@ -73,25 +74,29 @@ class ConcertServiceTest {
 
     @Test
     @DisplayName("콘서트 날짜 조회 - 대기열 검증에 실패한 경우")
-    void failToAccessWaiting_schedules() {
+    void waitingTokenAuthFailForSchedule() {
 
-        Long concertId = 1L;
+        long concertId = 1L;
 
         assertThatThrownBy(() -> concertService.searchSchedules(null, concertId))
-                .isInstanceOf(AuthorizationException.class)
-                .hasMessage("토큰 인증에 실패했습니다.");
+                .isInstanceOf(CustomNotFoundException.class)
+                .hasMessage("[WAITING_TOKEN_AUTH_FAIL] 토큰 인증에 실패했습니다.");
     }
 
     @Test
-    @DisplayName("콘서트 날짜 정보 조회 성공")
+    @DisplayName("예약 가능한 콘서트 날짜 및 PK 조회 성공")
     void searchSchedules() {
 
-        Long concertId = 1L;
-        WaitingToken waitingToken = WaitingTokenDummy.getWaitingTokenList().get(0);
+        String token = "valid-token";
 
-        List<LocalDate> dates = concertService.searchSchedules(waitingToken.getToken(), concertId);
-        List<Long> idList = concertService.getConcertScheduleId(concertId);
+        //콘서트 날짜 정보 조회
+        when(concertRepository.findByConcertEntity(concert)).thenReturn(concertScheduleList);
 
+        List<ConcertSchedule> concertSchedules = concertService.searchSchedules(token, concert.getId());
+        List<LocalDate> dates = concertService.getConcertScheduleDates(concertSchedules);
+        List<Long> idList = concertService.getConcertScheduleId(concertSchedules);
+
+        //콘서트 날짜 및 Pk 검증
         assertThat(dates.get(0)).isEqualTo("2024-07-10");
         assertThat(dates.get(1)).isEqualTo("2024-07-11");
         assertThat(idList.get(0)).isEqualTo(1L);
@@ -102,14 +107,44 @@ class ConcertServiceTest {
 
     @Test
     @DisplayName("콘서트 좌석 조회 - 대기열 검증에 실패한 경우")
-    void failToAccessWaiting_seats() {
+    void waitingTokenAuthFailForSeat() {
 
         long concertScheduleId = 1L;
         LocalDate concertDate = LocalDate.parse("2024-07-10");
 
         assertThatThrownBy(() -> concertService.searchSeats(null, concertScheduleId, concertDate))
-                .isInstanceOf(AuthorizationException.class)
-                .hasMessage("토큰 인증에 실패했습니다.");
+                .isInstanceOf(CustomNotFoundException.class)
+                .hasMessage("[WAITING_TOKEN_AUTH_FAIL] 토큰 인증에 실패했습니다.");
+    }
+
+    @Test
+    @DisplayName("이미 모든 좌석이 예약된 경우")
+    void alreadyAllSeatReserved() {
+
+        String token = "valid-token";
+        long concertScheduleId = 1L;
+        LocalDate concertDate = LocalDate.parse("2024-07-17");
+
+
+        List<ConcertSeat> seats = ConcertSeatDummy.getAllSeatReserved(concert, concertScheduleList);
+        ConcertSchedule concertSchedule = concertScheduleList.get(0);
+
+        List<ConcertSeat> concertSeats = seats.stream()
+                .filter(seat -> seat.getConcert().equals(concert))
+                .filter(seat -> seat.getConcertSchedule().equals(concertSchedule))
+                .filter(seat -> seat.getSeatStatus() == AVAILABLE)
+                .toList();
+
+        //날짜와 일치하는 콘서트 날짜 정보 조회
+        when(concertRepository.findByScheduleIdAndConcertDate(concertScheduleId, concertDate)).thenReturn(concertSchedule);
+
+        //예약 가능한 콘서트 좌석 조회
+        when(concertRepository.findByConcertAndSchedule(concert, concertSchedule)).thenReturn(concertSeats);
+
+        //콘서트 날짜와 일치하는 예약 가능한 좌석 조회 검증
+        assertThatThrownBy(() -> concertService.searchSeats(token, concertScheduleId, concertDate))
+                .isInstanceOf(CustomBadRequestException.class)
+                .hasMessage("[CONCERT_SEAT_ALL_RESERVED] 매진되었습니다.");
     }
 
     @Test
@@ -120,17 +155,21 @@ class ConcertServiceTest {
         LocalDate concertDate = LocalDate.parse("2024-07-10");
         WaitingToken waitingToken = WaitingTokenDummy.getWaitingTokenList().get(0);
         ConcertSchedule concertSchedule = concertScheduleList.get(0);
+
         List<ConcertSeat> concertSeats = concertSeatList.stream()
                 .filter(seat -> seat.getConcert().equals(concert))
                 .filter(seat -> seat.getConcertSchedule().equals(concertSchedule))
                 .filter(seat -> seat.getSeatStatus() == AVAILABLE)
-                .collect(Collectors.toList());
+                .toList();
 
-        when(concertRepository.findByScheduleIdAndConcertDate(concertScheduleId, concertDate)).thenReturn(concertScheduleList.get(0));
+        //날짜와 일치하는 콘서트 날짜 정보 조회
+        when(concertRepository.findByScheduleIdAndConcertDate(concertScheduleId, concertDate)).thenReturn(concertSchedule);
+
+        //예약 가능한 콘서트 좌석 조회
         when(concertRepository.findByConcertAndSchedule(concert, concertSchedule)).thenReturn(concertSeats);
 
         List<List<Object>> lists = concertService.searchSeats(waitingToken.getToken(), concertScheduleId, concertDate);
-        assertThat(lists.size()).isEqualTo(10); //현재 예약 가능한 좌석은 10개라고 가정한다.
+        assertThat(lists.size()).isEqualTo(20); //현재 예약 가능한 좌석은 20개라고 가정한다.
     }
 
     //-----------------------------------------------------------------------------------

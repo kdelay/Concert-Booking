@@ -5,6 +5,7 @@ import booking.api.concert.domain.enums.ConcertSeatStatus;
 import booking.api.waiting.domain.User;
 import booking.api.waiting.domain.WaitingToken;
 import booking.api.waiting.domain.WaitingTokenRepository;
+import booking.common.exception.CustomBadRequestException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,43 +23,54 @@ import static booking.api.concert.domain.enums.PaymentState.COMPLETED;
 import static booking.api.concert.domain.enums.ReservationStatus.RESERVED;
 import static booking.api.concert.domain.enums.ReservationStatus.RESERVING;
 import static booking.api.waiting.domain.WaitingTokenStatus.EXPIRED;
+import static booking.common.exception.ErrorCode.CONCERT_SEAT_ALL_RESERVED;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class ConcertService {
 
     private final ConcertRepository concertRepository;
     private final WaitingTokenRepository waitingTokenRepository;
 
-    //10초라고 가정한다.
-    private static final Duration RESERVATION_TIMEOUT = Duration.ofSeconds(10);
+    //1분이라고 가정한다.
+    private static final Duration RESERVATION_TIMEOUT = Duration.ofSeconds(60);
 
-    public List<LocalDate> searchSchedules(String token, Long concertId) {
+    /**
+     * 예약 가능한 콘서트 날짜 조회
+     * @param token Auth - Bearer Token
+     * @param concertId 콘서트 PK
+     * @return 콘서트 날짜 정보 List : ConcertSchedule
+     */
+    @Transactional(readOnly = true, rollbackFor = {Exception.class})
+    public List<ConcertSchedule> searchSchedules(String token, Long concertId) {
 
         //대기열 토큰 검증
         WaitingToken.tokenAuthorization(token);
 
-        //콘서트
+        //콘서트 정보 조회
         Concert concert = concertRepository.findByConcertId(concertId);
 
-        //콘서트 날짜
-        List<ConcertSchedule> schedules = concertRepository.findByConcertEntity(concert);
-        List<LocalDate> dates = new ArrayList<>();
+        //콘서트 날짜 정보 조회
+        return concertRepository.findByConcertEntity(concert);
+    }
 
+    /**
+     * @param schedules 콘서트 날짜 정보
+     * @return 콘서트 날짜 리스트 배열 반환
+     */
+    public List<LocalDate> getConcertScheduleDates(List<ConcertSchedule> schedules) {
+        List<LocalDate> dates = new ArrayList<>();
         for (ConcertSchedule schedule : schedules) {
             dates.add(schedule.getConcertDate());
         }
         return dates;
     }
 
-    public List<Long> getConcertScheduleId(Long concertId) {
-
-        //콘서트
-        Concert concert = concertRepository.findByConcertId(concertId);
-
-        //콘서트 날짜
-        List<ConcertSchedule> schedules = concertRepository.findByConcertEntity(concert);
+    /**
+     * @param schedules 콘서트 날짜 정보
+     * @return 콘서트 날짜 PK 리스트 배열 반환
+     */
+    public List<Long> getConcertScheduleId(List<ConcertSchedule> schedules) {
         List<Long> idList = new ArrayList<>();
         for (ConcertSchedule schedule : schedules) {
             idList.add(schedule.getId());
@@ -66,18 +78,31 @@ public class ConcertService {
         return idList;
     }
 
+    /**
+     * 콘서트 날짜와 일치하는 예약 가능한 좌석 조회
+     * @param token Auth - Bearer Token
+     * @param concertScheduleId 콘서트 날짜 PK
+     * @param concertDate 콘서트 날짜
+     * @return 콘서트 좌석 정보 List : seatNumber, seatPrice, seatStatus
+     */
+    @Transactional(readOnly = true, rollbackFor = {Exception.class})
     public List<List<Object>> searchSeats(String token, long concertScheduleId, LocalDate concertDate) {
 
         //대기열 토큰 검증
         WaitingToken.tokenAuthorization(token);
 
-        //콘서트 날짜
+        //날짜와 일치하는 콘서트 날짜 정보 조회
         ConcertSchedule concertSchedule = concertRepository.findByScheduleIdAndConcertDate(concertScheduleId, concertDate);
 
-        //콘서트 좌석
+        //예약 가능한 콘서트 좌석 조회 후 좌석 정보 반환
         List<List<Object>> seats = new ArrayList<>();
+
         List<ConcertSeat> concertSeats = concertRepository.findByConcertAndSchedule(concertSchedule.getConcert(), concertSchedule)
                 .stream().filter(seat -> seat.getSeatStatus() == AVAILABLE).toList();
+
+        //예약 가능한 콘서트 좌석이 없는 경우 예약할 수 없다.
+        if (concertSeats.isEmpty()) throw new CustomBadRequestException(CONCERT_SEAT_ALL_RESERVED, "매진되었습니다.");
+
         for (ConcertSeat concertSeat : concertSeats) {
             List<Object> seatInfo = new ArrayList<>();
             seatInfo.add(concertSeat.getSeatNumber());

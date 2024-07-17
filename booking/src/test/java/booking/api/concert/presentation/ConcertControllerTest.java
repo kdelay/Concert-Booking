@@ -1,5 +1,8 @@
 package booking.api.concert.presentation;
 
+import booking.api.concert.application.ConcertFacade;
+import booking.api.concert.domain.Concert;
+import booking.api.concert.domain.ConcertSchedule;
 import booking.api.concert.domain.ConcertService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
@@ -12,6 +15,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -32,6 +36,9 @@ class ConcertControllerTest {
     @MockBean
     ConcertService concertService;
 
+    @MockBean
+    ConcertFacade concertFacade;
+
     @Test
     @DisplayName("GET /concert/schedules/{concertId} 콘서트 예약 가능 날짜 조회")
     void searchSchedules() throws Exception {
@@ -39,14 +46,27 @@ class ConcertControllerTest {
         Long concertId = 1L;
         String token = UUID.randomUUID().toString();
 
-        List<LocalDate> dates = List.of(LocalDate.parse("2024-07-10"), LocalDate.parse("2024-07-11"));
-        List<Long> idList = List.of(1L, 2L);
-        given(concertService.searchSchedules(token, concertId)).willReturn(dates);
-        given(concertService.getConcertScheduleId(concertId)).willReturn(idList);
+        Concert concert = Concert.create(concertId, "A 콘서트", "A");
+        List<ConcertSchedule> concertSchedules = List.of(
+                ConcertSchedule.create(1L, concert, LocalDate.parse("2024-07-10")),
+                ConcertSchedule.create(2L, concert, LocalDate.parse("2024-07-11"))
+        );
+
+        List<LocalDate> dates = new ArrayList<>();
+        List<Long> idList = new ArrayList<>();
+        for (ConcertSchedule schedule : concertSchedules) {
+            dates.add(schedule.getConcertDate());
+            idList.add(schedule.getId());
+        }
+
+        given(concertFacade.searchSchedules(token, concertId)).willReturn(concertSchedules);
+        given(concertFacade.getConcertScheduleDates(concertSchedules)).willReturn(dates);
+        given(concertFacade.getConcertScheduleId(concertSchedules)).willReturn(idList);
 
         mockMvc.perform(get("/concert/schedules/{concertId}", concertId)
                 .header("Authorization", token))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
     }
 
     @Test
@@ -61,15 +81,11 @@ class ConcertControllerTest {
                 List.of(1, BigDecimal.valueOf(1000), "AVAILABLE"),
                 List.of(2, BigDecimal.valueOf(1000), "AVAILABLE")
         );
-        given(concertService.searchSeats(token, concertScheduleId, concertDate)).willReturn(seatsInfo);
+        given(concertFacade.searchSeats(token, concertScheduleId, concertDate)).willReturn(seatsInfo);
 
         mockMvc.perform(get("/concert/seats/{concertScheduleId}", concertScheduleId)
                         .header("Authorization", token))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON));
-    }
-
-    @Test
-    void bookingSeats() {
     }
 }

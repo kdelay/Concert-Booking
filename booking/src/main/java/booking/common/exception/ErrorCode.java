@@ -12,9 +12,13 @@ public enum ErrorCode {
 
     //waiting token
     WAITING_TOKEN_IS_NOT_FOUND("대기열 토큰이 존재하지 않습니다."),
+    WAITING_TOKEN_AUTH_FAIL("토큰 인증에 실패했습니다."),
 
     //concert
-    CONCERT_IS_NOT_FOUND("콘서트가 존재하지 않습니다.");
+    CONCERT_IS_NOT_FOUND("콘서트가 존재하지 않습니다."),
+
+    //concert seat
+    CONCERT_SEAT_ALL_RESERVED("매진되었습니다.");
 
     private final String msg;
 }
