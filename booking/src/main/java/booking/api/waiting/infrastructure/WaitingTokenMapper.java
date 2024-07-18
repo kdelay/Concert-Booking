@@ -18,6 +18,12 @@ public class WaitingTokenMapper {
                 .build();
     }
 
+    public static List<User> userToDomainList(List<UserEntity> entities) {
+        return entities.stream()
+                .map(WaitingTokenMapper::userToDomain)
+                .toList();
+    }
+
     public static WaitingToken toDomain(WaitingTokenEntity entity) {
         return new WaitingToken(
                 entity.getId(),

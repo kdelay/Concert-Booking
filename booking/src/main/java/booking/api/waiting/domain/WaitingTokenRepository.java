@@ -11,6 +11,8 @@ public interface WaitingTokenRepository {
 
     User saveUser(User user);
 
+    List<User> findUsers();
+
     //waiting token
     WaitingToken findByToken(String token);
 

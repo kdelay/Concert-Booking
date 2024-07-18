@@ -1,6 +1,8 @@
 package booking.api.concert.infrastructure;
 
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -11,6 +13,7 @@ public interface JpaConcertSeatRepository extends JpaRepository<ConcertSeatEntit
 
     List<ConcertSeatEntity> findByConcertEntityAndConcertScheduleEntity(ConcertEntity concertEntity, ConcertScheduleEntity concertScheduleEntity);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select cs from ConcertSeatEntity cs " +
             "where cs.concertEntity.id = :concertId " +
             "and cs.concertScheduleEntity.id = :concertScheduleId " +

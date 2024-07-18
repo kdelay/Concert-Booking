@@ -33,6 +33,11 @@ public class WaitingTokenRepositoryImpl implements WaitingTokenRepository {
     }
 
     @Override
+    public List<User> findUsers() {
+        return WaitingTokenMapper.userToDomainList(jpaUserRepository.findAll());
+    }
+
+    @Override
     public WaitingToken findByToken(String token) {
         return WaitingTokenMapper.toDomain(jpaWaitingTokenRepository.findByToken(token).orElseThrow(() -> new IllegalArgumentException("토큰이 없습니다.")));
     }

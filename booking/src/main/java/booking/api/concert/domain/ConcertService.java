@@ -4,7 +4,9 @@ import booking.api.concert.Payment;
 import booking.api.concert.domain.enums.ConcertSeatStatus;
 import booking.api.concert.domain.enums.PaymentState;
 import booking.api.waiting.domain.User;
+import booking.api.waiting.domain.WaitingToken;
 import booking.api.waiting.domain.WaitingTokenRepository;
+import booking.api.waiting.domain.WaitingTokenStatus;
 import booking.common.exception.CustomBadRequestException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -123,7 +125,6 @@ public class ConcertService {
                 .toList();
 
         List<Reservation> reservations = new ArrayList<>();
-        List<BigDecimal> prices = new ArrayList<>();
         for (ConcertSeat seat : concertSeats) {
             //예약 가능한 좌석 상태인지 검증
             if (seat.getSeatStatus() != AVAILABLE) {
@@ -165,24 +166,33 @@ public class ConcertService {
         if (reservations.isEmpty()) return;
 
         reservations.forEach(reservation -> {
-            //예약 생성 시간
-            LocalDateTime createdAt = reservation.getCreatedAt();
-            //예약 가능 시간
-            Duration duration = Duration.between(createdAt, now);
 
-            //1분이라고 가정하고, 1분이 지난 경우
-            if (duration.toSeconds() > 60) {
-                //예약 취소
-                reservation.updateReservationStatus(CANCELED);
-                concertRepository.saveReservation(reservation);
-                //결제 취소
-                Payment payment = concertRepository.findPaymentByReservation(reservation);
-                payment.updatePaymentStatus(PaymentState.CANCELED);
-                concertRepository.savePayment(payment);
-                //좌석 임시 배정 취소 -> 예약 가능 상태로 변경
-                ConcertSeat concertSeat = concertRepository.findBySeatId(reservation.getConcertSeatId());
-                concertSeat.updateSeatStatus(AVAILABLE);
-                concertRepository.saveConcertSeat(concertSeat);
+            //결제 상태가 완료 상태가 아닌 경우
+            if (concertRepository.findPaymentByReservation(reservation).getPaymentState() == COMPLETED) {
+
+                //예약 생성 시간
+                LocalDateTime createdAt = reservation.getCreatedAt();
+                //예약 가능 시간
+                Duration duration = Duration.between(createdAt, now);
+
+                //1분이라고 가정하고, 1분이 지난 경우
+                if (duration.toSeconds() > 60) {
+                    //예약 취소
+                    reservation.updateReservationStatus(CANCELED);
+                    concertRepository.saveReservation(reservation);
+                    //결제 취소
+                    Payment payment = concertRepository.findPaymentByReservation(reservation);
+                    payment.updatePaymentStatus(PaymentState.CANCELED);
+                    concertRepository.savePayment(payment);
+                    //좌석 임시 배정 취소 -> 예약 가능 상태로 변경
+                    ConcertSeat concertSeat = concertRepository.findBySeatId(reservation.getConcertSeatId());
+                    concertSeat.updateSeatStatus(AVAILABLE);
+                    concertRepository.saveConcertSeat(concertSeat);
+                    //대기열 토큰 만료
+                    WaitingToken waitingToken = waitingTokenRepository.findUsingTokenByUserId(reservation.getUserId());
+                    waitingToken.updateWaitingTokenStatus(WaitingTokenStatus.EXPIRED);
+                    waitingTokenRepository.save(waitingToken);
+                }
             }
         });
     }
