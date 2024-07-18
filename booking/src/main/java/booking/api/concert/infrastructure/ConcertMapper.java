@@ -1,6 +1,6 @@
 package booking.api.concert.infrastructure;
 
-import booking.api.concert.Payment;
+import booking.api.concert.domain.Payment;
 import booking.api.concert.domain.Concert;
 import booking.api.concert.domain.ConcertSchedule;
 import booking.api.concert.domain.ConcertSeat;

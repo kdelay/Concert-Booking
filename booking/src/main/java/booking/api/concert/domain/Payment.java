@@ -1,6 +1,5 @@
-package booking.api.concert;
+package booking.api.concert.domain;
 
-import booking.api.concert.domain.Reservation;
 import booking.api.concert.domain.enums.PaymentState;
 import lombok.Getter;
 

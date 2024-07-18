@@ -72,14 +72,6 @@ public class WaitingToken {
     }
 
     /**
-     * 토큰이 없는 경우 exception 발생
-     * @param token Auth - Bearer Token
-     */
-    public static void tokenAuthorization(String token) {
-        if (token == null || token.isEmpty()) throw new CustomNotFoundException(WAITING_TOKEN_AUTH_FAIL, "토큰 인증에 실패했습니다.");
-    }
-
-    /**
      * 변경 시간 업데이트
      * @param now 현재 시간
      */

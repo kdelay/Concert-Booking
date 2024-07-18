@@ -1,6 +1,6 @@
 package booking.api.concert.infrastructure;
 
-import booking.api.concert.Payment;
+import booking.api.concert.domain.Payment;
 import booking.api.concert.domain.*;
 import booking.api.concert.domain.enums.ReservationStatus;
 import booking.common.exception.CustomNotFoundException;

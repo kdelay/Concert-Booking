@@ -1,6 +1,5 @@
 package booking.api.concert.domain;
 
-import booking.api.concert.Payment;
 import booking.api.concert.domain.enums.ConcertSeatStatus;
 import booking.api.concert.domain.enums.PaymentState;
 import booking.api.waiting.domain.User;

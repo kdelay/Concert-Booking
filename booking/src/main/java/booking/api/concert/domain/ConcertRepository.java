@@ -1,6 +1,5 @@
 package booking.api.concert.domain;
 
-import booking.api.concert.Payment;
 import booking.api.concert.domain.enums.ReservationStatus;
 
 import java.time.LocalDate;
