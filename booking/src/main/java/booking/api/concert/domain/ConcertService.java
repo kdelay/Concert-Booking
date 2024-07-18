@@ -4,7 +4,6 @@ import booking.api.concert.Payment;
 import booking.api.concert.domain.enums.ConcertSeatStatus;
 import booking.api.concert.domain.enums.PaymentState;
 import booking.api.waiting.domain.User;
-import booking.api.waiting.domain.WaitingToken;
 import booking.api.waiting.domain.WaitingTokenRepository;
 import booking.common.exception.CustomBadRequestException;
 import lombok.RequiredArgsConstructor;
@@ -34,15 +33,11 @@ public class ConcertService {
 
     /**
      * 예약 가능한 콘서트 날짜 조회
-     * @param token Auth - Bearer Token
      * @param concertId 콘서트 PK
      * @return 콘서트 날짜 정보 List : ConcertSchedule
      */
     @Transactional(readOnly = true, rollbackFor = {Exception.class})
-    public List<ConcertSchedule> searchSchedules(String token, Long concertId) {
-
-        //대기열 토큰 검증
-        WaitingToken.tokenAuthorization(token);
+    public List<ConcertSchedule> searchSchedules(Long concertId) {
 
         //콘서트 정보 조회
         Concert concert = concertRepository.findByConcertId(concertId);
@@ -77,16 +72,12 @@ public class ConcertService {
 
     /**
      * 콘서트 날짜와 일치하는 예약 가능한 좌석 조회
-     * @param token Auth - Bearer Token
      * @param concertScheduleId 콘서트 날짜 PK
      * @param concertDate 콘서트 날짜
      * @return 콘서트 좌석 정보 List : seatNumber, seatPrice, seatStatus
      */
     @Transactional(readOnly = true, rollbackFor = {Exception.class})
-    public List<List<Object>> searchSeats(String token, long concertScheduleId, LocalDate concertDate) {
-
-        //대기열 토큰 검증
-        WaitingToken.tokenAuthorization(token);
+    public List<List<Object>> searchSeats(long concertScheduleId, LocalDate concertDate) {
 
         //날짜와 일치하는 콘서트 날짜 정보 조회
         ConcertSchedule concertSchedule = concertRepository.findByScheduleIdAndConcertDate(concertScheduleId, concertDate);
@@ -112,7 +103,6 @@ public class ConcertService {
 
     /**
      * 콘서트 좌석 예약
-     * @param token Auth - Bearer Token
      * @param userId 유저 PK
      * @param concertScheduleId 콘서트 날짜 PK
      * @param concertDate 콘서트 날짜
@@ -120,10 +110,7 @@ public class ConcertService {
      * @return 예약 정보 리스트 배열
      */
     @Transactional(rollbackFor = {Exception.class})
-    public List<Reservation> bookingSeats(String token, long userId, long concertScheduleId, LocalDate concertDate, List<Integer> seatNumberList) {
-
-        //대기열 토큰 검증
-        WaitingToken.tokenAuthorization(token);
+    public List<Reservation> bookingSeats(long userId, long concertScheduleId, LocalDate concertDate, List<Integer> seatNumberList) {
 
         //콘서트 날짜 정보 조회
         ConcertSchedule concertSchedule = concertRepository.findByScheduleIdAndConcertDate(concertScheduleId, concertDate);
@@ -177,6 +164,7 @@ public class ConcertService {
 
         //예약 진행 중인 상태의 예약 데이터 조회
         List<Reservation> reservations = concertRepository.findAllByReservationStatus(RESERVING);
+        if (reservations.isEmpty()) return;
 
         reservations.forEach(reservation -> {
             //예약 생성 시간
@@ -198,10 +186,7 @@ public class ConcertService {
         });
     }
 
-    public ConcertSeat pay(String token, Long concertSeatId, Long reservationId) {
-
-        //대기열 토큰 검증
-        WaitingToken.tokenAuthorization(token);
+    public ConcertSeat pay(Long concertSeatId, Long reservationId) {
 
         //예약 정보 가져오기
         Reservation reservation = concertRepository.findByReservationId(reservationId);

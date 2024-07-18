@@ -15,7 +15,7 @@ import java.util.Objects;
 
 @Entity @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "user")
+@Table(name = "\"user\"")
 public class UserEntity {
 
     @Id

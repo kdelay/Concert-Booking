@@ -23,7 +23,8 @@ import static booking.common.exception.ErrorCode.USER_IS_NOT_FOUND;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
@@ -80,7 +81,7 @@ class WaitingTokenServiceTest {
         lenient().when(concertRepository.findByConcertId(concertId)).thenReturn(concert);
 
         //when & then
-        assertThatThrownBy(() -> waitingTokenService.issueTokenOrSearchWaiting(anyString(), userId, concertId))
+        assertThatThrownBy(() -> waitingTokenService.issueTokenOrSearchWaiting(userId, concertId))
                 .isInstanceOf(CustomNotFoundException.class)
                 .hasMessage("[USER_IS_NOT_FOUND] 해당하는 유저가 없습니다. [userId : %d]".formatted(userId));
     }
@@ -111,7 +112,7 @@ class WaitingTokenServiceTest {
         });
 
         //when
-        WaitingToken result = waitingTokenService.issueTokenOrSearchWaiting(token, userId, concertId);
+        WaitingToken result = waitingTokenService.issueTokenOrSearchWaiting(userId, concertId);
 
         //토큰이 있는지 검증
         assertNotNull(result);
@@ -144,7 +145,7 @@ class WaitingTokenServiceTest {
         String token = waitingToken.getToken();
 
         //when
-        WaitingToken result = waitingTokenService.issueTokenOrSearchWaiting(token, user.getId(), anyLong());
+        WaitingToken result = waitingTokenService.issueTokenOrSearchWaiting(user.getId(), anyLong());
 
         //토큰 정보와 id 가 동일한지 검증
         assertThat(result.getId()).isEqualTo(waitingTokenId);

@@ -7,6 +7,7 @@ import booking.api.concert.presentation.request.BookingSeatsRequest;
 import booking.api.concert.presentation.response.BookingSeatsResponse;
 import booking.api.concert.presentation.response.SearchScheduleResponse;
 import booking.api.concert.presentation.response.SearchSeatsResponse;
+import booking.support.Authorization;
 import jakarta.websocket.server.PathParam;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -21,31 +22,28 @@ public class ConcertController {
 
     private final ConcertFacade concertFacade;
 
+    @Authorization
     @GetMapping("/schedules/{concertId}")
-    public SearchScheduleResponse searchSchedules(
-            @RequestHeader(value = "Authorization", required = false) String token, @PathVariable Long concertId
-    ) {
-        List<ConcertSchedule> concertSchedules = concertFacade.searchSchedules(token, concertId);
+    public SearchScheduleResponse searchSchedules(@PathVariable Long concertId) {
+        List<ConcertSchedule> concertSchedules = concertFacade.searchSchedules(concertId);
         return new SearchScheduleResponse(
                 concertFacade.getConcertScheduleDates(concertSchedules),
                 concertFacade.getConcertScheduleId(concertSchedules)
         );
     }
 
+    @Authorization
     @GetMapping("/seats/{concertScheduleId}")
     public List<SearchSeatsResponse> searchSeats(
-            @RequestHeader(value = "Authorization", required = false) String token,
             @PathVariable long concertScheduleId, @PathParam("concertDate") LocalDate concertDate
     ) {
-        return SearchSeatsResponse.of(concertFacade.searchSeats(token, concertScheduleId, concertDate));
+        return SearchSeatsResponse.of(concertFacade.searchSeats(concertScheduleId, concertDate));
     }
 
+    @Authorization
     @PostMapping("/seats/booking")
-    public List<BookingSeatsResponse> bookingSeats(
-            @RequestHeader(value = "Authorization", required = false) String token,
-            @RequestBody BookingSeatsRequest request
-    ) {
-        List<Reservation> reservations = concertFacade.bookingSeats(token, request.userId(), request.concertScheduleId(), request.concertDate(), request.seatNumberList());
+    public List<BookingSeatsResponse> bookingSeats(@RequestBody BookingSeatsRequest request) {
+        List<Reservation> reservations = concertFacade.bookingSeats(request.userId(), request.concertScheduleId(), request.concertDate(), request.seatNumberList());
         return BookingSeatsResponse.of(reservations);
     }
 }

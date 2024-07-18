@@ -27,7 +27,7 @@ class WaitingTokenFacadeTest {
         long userId = -1L;
         long concertId = 1L;
 
-        assertThatThrownBy(() -> waitingTokenFacade.issueTokenOrSearchWaiting("valid-token", userId, concertId))
+        assertThatThrownBy(() -> waitingTokenFacade.issueTokenOrSearchWaiting(userId, concertId))
                 .isInstanceOf(CustomNotFoundException.class)
                 .hasMessage("[USER_IS_NOT_FOUND] 해당하는 유저가 없습니다. [userId : %d]".formatted(userId));
     }
@@ -39,7 +39,7 @@ class WaitingTokenFacadeTest {
         long userId = 1L;
         long concertId = -1L;
 
-        assertThatThrownBy(() -> waitingTokenFacade.issueTokenOrSearchWaiting("valid-token", userId, concertId))
+        assertThatThrownBy(() -> waitingTokenFacade.issueTokenOrSearchWaiting(userId, concertId))
                 .isInstanceOf(CustomNotFoundException.class)
                 .hasMessage("[CONCERT_IS_NOT_FOUND] 해당하는 콘서트가 없습니다. [concertId : %d]".formatted(concertId));
     }
@@ -50,7 +50,7 @@ class WaitingTokenFacadeTest {
 
         long userId = 2L;
         long concertId = 1L;
-        WaitingToken waitingToken = waitingTokenFacade.issueTokenOrSearchWaiting(null, userId, concertId);
+        WaitingToken waitingToken = waitingTokenFacade.issueTokenOrSearchWaiting(userId, concertId);
 
         assertNotNull(waitingToken.getToken());
     }
@@ -63,7 +63,7 @@ class WaitingTokenFacadeTest {
         long userId = 1L;
         long concertId = 1L;
 
-        WaitingToken waitingToken = waitingTokenFacade.issueTokenOrSearchWaiting(token, userId, concertId);
+        WaitingToken waitingToken = waitingTokenFacade.issueTokenOrSearchWaiting(userId, concertId);
 
         //동일한 토큰인지 검증
         assertThat(waitingToken.getToken()).isEqualTo(token);

@@ -78,7 +78,7 @@ class ConcertServiceTest {
 
         long concertId = 1L;
 
-        assertThatThrownBy(() -> concertService.searchSchedules(null, concertId))
+        assertThatThrownBy(() -> concertService.searchSchedules(concertId))
                 .isInstanceOf(CustomNotFoundException.class)
                 .hasMessage("[WAITING_TOKEN_AUTH_FAIL] 토큰 인증에 실패했습니다.");
     }
@@ -87,12 +87,10 @@ class ConcertServiceTest {
     @DisplayName("예약 가능한 콘서트 날짜 및 PK 조회 성공")
     void searchSchedules() {
 
-        String token = "valid-token";
-
         //콘서트 날짜 정보 조회
         when(concertRepository.findByConcertEntity(concert)).thenReturn(concertScheduleList);
 
-        List<ConcertSchedule> concertSchedules = concertService.searchSchedules(token, concert.getId());
+        List<ConcertSchedule> concertSchedules = concertService.searchSchedules(concert.getId());
         List<LocalDate> dates = concertService.getConcertScheduleDates(concertSchedules);
         List<Long> idList = concertService.getConcertScheduleId(concertSchedules);
 
@@ -112,7 +110,7 @@ class ConcertServiceTest {
         long concertScheduleId = 1L;
         LocalDate concertDate = LocalDate.parse("2024-07-10");
 
-        assertThatThrownBy(() -> concertService.searchSeats(null, concertScheduleId, concertDate))
+        assertThatThrownBy(() -> concertService.searchSeats(concertScheduleId, concertDate))
                 .isInstanceOf(CustomNotFoundException.class)
                 .hasMessage("[WAITING_TOKEN_AUTH_FAIL] 토큰 인증에 실패했습니다.");
     }
@@ -142,7 +140,7 @@ class ConcertServiceTest {
         when(concertRepository.findByConcertAndSchedule(concert, concertSchedule)).thenReturn(concertSeats);
 
         //콘서트 날짜와 일치하는 예약 가능한 좌석 조회 검증
-        assertThatThrownBy(() -> concertService.searchSeats(token, concertScheduleId, concertDate))
+        assertThatThrownBy(() -> concertService.searchSeats(concertScheduleId, concertDate))
                 .isInstanceOf(CustomBadRequestException.class)
                 .hasMessage("[CONCERT_SEAT_ALL_RESERVED] 매진되었습니다.");
     }
@@ -168,7 +166,7 @@ class ConcertServiceTest {
         //예약 가능한 콘서트 좌석 조회
         when(concertRepository.findByConcertAndSchedule(concert, concertSchedule)).thenReturn(concertSeats);
 
-        List<List<Object>> lists = concertService.searchSeats(waitingToken.getToken(), concertScheduleId, concertDate);
+        List<List<Object>> lists = concertService.searchSeats(concertScheduleId, concertDate);
         assertThat(lists.size()).isEqualTo(20); //현재 예약 가능한 좌석은 20개라고 가정한다.
     }
 
@@ -182,7 +180,7 @@ class ConcertServiceTest {
         LocalDate concertDate = LocalDate.parse("2024-07-10");
         List<Integer> seatNumberList = List.of(1, 2, 8, 9);
 
-        assertThatThrownBy(() -> concertService.bookingSeats(null, 1L, concertScheduleId, concertDate, seatNumberList))
+        assertThatThrownBy(() -> concertService.bookingSeats(1L, concertScheduleId, concertDate, seatNumberList))
                 .isInstanceOf(CustomNotFoundException.class)
                 .hasMessage("[WAITING_TOKEN_AUTH_FAIL] 토큰 인증에 실패했습니다.");
     }
@@ -207,7 +205,7 @@ class ConcertServiceTest {
             when(concertRepository.findByConcertAndScheduleAndSeatNumber(anyLong(), anyLong(), eq(concertSeat.getSeatNumber()))).thenReturn(concertSeat);
         }
 
-        assertThatThrownBy(() -> concertService.bookingSeats("valid_token", 1L, 1L, LocalDate.now(), seatNumberList))
+        assertThatThrownBy(() -> concertService.bookingSeats(1L, 1L, LocalDate.now(), seatNumberList))
                 .isInstanceOf(CustomBadRequestException.class)
                 .hasMessage("[CONCERT_SEAT_IS_NOT_AVAILABLE] 이미 예약되거나 임시 배정 중인 좌석입니다.");
     }
@@ -233,7 +231,7 @@ class ConcertServiceTest {
             when(concertRepository.findByConcertAndScheduleAndSeatNumber(anyLong(), anyLong(), eq(seat.getSeatNumber()))).thenReturn(seat);
         }
 
-        List<Reservation> reservations = concertService.bookingSeats("valid_token", 1L, 1L, LocalDate.now(), seatNumberList);
+        List<Reservation> reservations = concertService.bookingSeats(1L, 1L, LocalDate.now(), seatNumberList);
 
         //임시 배정 상태로 변경
         for (ConcertSeat seat : concertSeats) {
@@ -294,7 +292,6 @@ class ConcertServiceTest {
     @DisplayName("결제 성공")
     void paySuccess() {
 
-        String token = "valid_token";
         Long concertSeatId = 1L;
         Long reservationId = 1L;
         Long userId = 1L;
@@ -309,7 +306,7 @@ class ConcertServiceTest {
         User user = User.create(userId, BigDecimal.valueOf(500));
         when(waitingTokenRepository.findByUserId(userId)).thenReturn(user);
 
-        ConcertSeat result = concertService.pay(token, concertSeatId, reservationId);
+        ConcertSeat result = concertService.pay(concertSeatId, reservationId);
 
         assertEquals(ConcertSeatStatus.RESERVED, result.getSeatStatus());
     }

@@ -30,7 +30,7 @@ class ConcertFacadeTest {
         String token = "valid-token";
         long concertId = 1L;
 
-        List<ConcertSchedule> schedules = concertFacade.searchSchedules(token, concertId);
+        List<ConcertSchedule> schedules = concertFacade.searchSchedules(concertId);
         List<LocalDate> dates = concertFacade.getConcertScheduleDates(schedules);
         List<Long> idList = concertFacade.getConcertScheduleId(schedules);
 
@@ -46,7 +46,7 @@ class ConcertFacadeTest {
         long concertScheduleId = 1L;
         LocalDate concertDate = LocalDate.parse("2024-07-10");
 
-        List<List<Object>> seatsInfo = concertFacade.searchSeats(token, concertScheduleId, concertDate);
+        List<List<Object>> seatsInfo = concertFacade.searchSeats(concertScheduleId, concertDate);
 
         List<SearchSeatsResponse> result = new ArrayList<>();
         for (List<Object> details : seatsInfo) {

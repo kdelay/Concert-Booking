@@ -16,8 +16,8 @@ public class ConcertFacade {
     private final ConcertService concertService;
 
     //예약 가능한 콘서트 날짜 조회
-    public List<ConcertSchedule> searchSchedules(String token, Long concertId) {
-        return concertService.searchSchedules(token, concertId);
+    public List<ConcertSchedule> searchSchedules(Long concertId) {
+        return concertService.searchSchedules(concertId);
     }
 
     //콘서트 날짜 정보
@@ -31,13 +31,13 @@ public class ConcertFacade {
     }
 
     //콘서트 날짜와 일치하는 예약 가능한 좌석 조회
-    public List<List<Object>> searchSeats(String token, long concertScheduleId, LocalDate concertDate) {
-        return concertService.searchSeats(token, concertScheduleId, concertDate);
+    public List<List<Object>> searchSeats(long concertScheduleId, LocalDate concertDate) {
+        return concertService.searchSeats(concertScheduleId, concertDate);
     }
 
     //콘서트 좌석 예약
-    public List<Reservation> bookingSeats(String token, long userId, long concertScheduleId, LocalDate concertDate, List<Integer> seatNumberList) {
-        return concertService.bookingSeats(token, userId, concertScheduleId, concertDate, seatNumberList);
+    public List<Reservation> bookingSeats(long userId, long concertScheduleId, LocalDate concertDate, List<Integer> seatNumberList) {
+        return concertService.bookingSeats(userId, concertScheduleId, concertDate, seatNumberList);
     }
 
     //콘서트 좌석 임시 배정 시간 및 예약 만료 시간 체크

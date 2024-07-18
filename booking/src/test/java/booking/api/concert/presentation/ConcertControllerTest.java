@@ -59,7 +59,7 @@ class ConcertControllerTest {
             idList.add(schedule.getId());
         }
 
-        given(concertFacade.searchSchedules(token, concertId)).willReturn(concertSchedules);
+        given(concertFacade.searchSchedules(concertId)).willReturn(concertSchedules);
         given(concertFacade.getConcertScheduleDates(concertSchedules)).willReturn(dates);
         given(concertFacade.getConcertScheduleId(concertSchedules)).willReturn(idList);
 
@@ -81,7 +81,7 @@ class ConcertControllerTest {
                 List.of(1, BigDecimal.valueOf(1000), "AVAILABLE"),
                 List.of(2, BigDecimal.valueOf(1000), "AVAILABLE")
         );
-        given(concertFacade.searchSeats(token, concertScheduleId, concertDate)).willReturn(seatsInfo);
+        given(concertFacade.searchSeats(concertScheduleId, concertDate)).willReturn(seatsInfo);
 
         mockMvc.perform(get("/concert/seats/{concertScheduleId}", concertScheduleId)
                         .header("Authorization", token))
