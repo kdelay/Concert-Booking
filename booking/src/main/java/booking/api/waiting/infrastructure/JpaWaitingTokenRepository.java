@@ -4,6 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface JpaWaitingTokenRepository extends JpaRepository<WaitingTokenEntity, Long> {
@@ -23,4 +24,10 @@ public interface JpaWaitingTokenRepository extends JpaRepository<WaitingTokenEnt
     Long findActivateTokenSortedByIdDesc();
 
     Optional<WaitingTokenEntity> findByToken(String token);
+
+    /**
+     * @return DEACTIVATE 상태인 토큰 전체 조회
+     */
+    @Query("select wt from WaitingTokenEntity wt where wt.waitingTokenStatus = 'DEACTIVATE' order by wt.id asc limit 3")
+    List<WaitingTokenEntity> findByDeactivateTokens();
 }

@@ -2,6 +2,8 @@ package booking.api.waiting.domain;
 
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
+
 public interface WaitingTokenRepository {
 
     //user
@@ -17,4 +19,6 @@ public interface WaitingTokenRepository {
     Long findActivateTokenSortedByIdDesc();
 
     WaitingToken findUsingTokenByUserId(@Param("userId") Long userId);
+
+    List<WaitingToken> findByDeactivateTokens();
 }

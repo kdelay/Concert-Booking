@@ -18,7 +18,7 @@ public class WaitingToken {
     private final String token;
     private WaitingTokenStatus waitingTokenStatus;
     private final LocalDateTime createdAt;
-    private final LocalDateTime modifiedAt;
+    private LocalDateTime modifiedAt;
 
     public WaitingToken(
             Long id,
@@ -77,5 +77,13 @@ public class WaitingToken {
      */
     public static void tokenAuthorization(String token) {
         if (token == null || token.isEmpty()) throw new CustomNotFoundException(WAITING_TOKEN_AUTH_FAIL, "토큰 인증에 실패했습니다.");
+    }
+
+    /**
+     * 변경 시간 업데이트
+     * @param now 현재 시간
+     */
+    public void updateModifiedAt(LocalDateTime now) {
+        this.modifiedAt = now;
     }
 }

@@ -11,8 +11,8 @@ public class ConcertSeatScheduler {
 
     private final ConcertFacade concertFacade;
 
-    //매 5초마다 스케줄러 작동
-    @Scheduled(fixedRate = 5000)
+    //매 1분마다 스케줄러 작동
+    @Scheduled(fixedRate = 60000)
     public void checkExpiredTimeForSeat() {
         concertFacade.checkExpiredTimeForSeat();
     }

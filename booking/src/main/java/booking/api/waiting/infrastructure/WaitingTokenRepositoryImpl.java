@@ -7,6 +7,8 @@ import booking.common.exception.CustomNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 import static booking.common.exception.ErrorCode.USER_IS_NOT_FOUND;
 
 @Repository
@@ -52,5 +54,10 @@ public class WaitingTokenRepositoryImpl implements WaitingTokenRepository {
         WaitingTokenEntity waitingTokenEntity = jpaWaitingTokenRepository.findUsingTokenByUserId(userId).orElse(null);
         if (waitingTokenEntity == null) return null;
         return WaitingTokenMapper.toDomain(waitingTokenEntity);
+    }
+
+    @Override
+    public List<WaitingToken> findByDeactivateTokens() {
+        return WaitingTokenMapper.toDomainList(jpaWaitingTokenRepository.findAll());
     }
 }
