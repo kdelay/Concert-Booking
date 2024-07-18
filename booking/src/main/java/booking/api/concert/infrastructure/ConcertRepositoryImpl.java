@@ -1,6 +1,5 @@
 package booking.api.concert.infrastructure;
 
-import booking.api.concert.domain.Payment;
 import booking.api.concert.domain.*;
 import booking.api.concert.domain.enums.ReservationStatus;
 import booking.common.exception.CustomNotFoundException;
@@ -28,6 +27,11 @@ public class ConcertRepositoryImpl implements ConcertRepository {
                 .orElseThrow(() -> new CustomNotFoundException(CONCERT_IS_NOT_FOUND,
                         "해당하는 콘서트가 없습니다. [concertId : %d]".formatted(concertId)))
         );
+    }
+
+    @Override
+    public List<Concert> findAllConcerts() {
+        return ConcertMapper.toDomainList(jpaConcertRepository.findAll());
     }
 
     @Override

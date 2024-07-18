@@ -1,6 +1,7 @@
 package booking.api.concert.presentation;
 
 import booking.api.concert.application.ConcertFacade;
+import booking.api.concert.domain.Concert;
 import booking.api.concert.domain.ConcertSchedule;
 import booking.api.concert.domain.Reservation;
 import booking.api.concert.presentation.request.BookingSeatsRequest;
@@ -21,6 +22,11 @@ import java.util.List;
 public class ConcertController {
 
     private final ConcertFacade concertFacade;
+
+    @GetMapping("/list")
+    public List<Concert> searchList() {
+        return concertFacade.searchList();
+    }
 
     @Authorization
     @GetMapping("/schedules/{concertId}")

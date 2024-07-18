@@ -72,6 +72,19 @@ class ConcertServiceTest {
     //-----------------------------------------------------------------------------------
 
     @Test
+    @DisplayName("콘서트 조회")
+    void searchList() {
+        List<Concert> concerts = List.of(
+            new Concert(1L, "A 콘서트", "A"),
+            new Concert(1L, "A 콘서트", "B")
+        );
+        when(concertRepository.findAllConcerts()).thenReturn(concerts);
+
+        List<Concert> concertList = concertService.searchList();
+        assertThat(concertList).hasSize(2);
+    }
+
+    @Test
     @DisplayName("콘서트 날짜 조회 - 대기열 검증에 실패한 경우")
     void waitingTokenAuthFailForSchedule() {
 

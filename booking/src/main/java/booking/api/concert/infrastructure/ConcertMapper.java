@@ -1,10 +1,6 @@
 package booking.api.concert.infrastructure;
 
-import booking.api.concert.domain.Payment;
-import booking.api.concert.domain.Concert;
-import booking.api.concert.domain.ConcertSchedule;
-import booking.api.concert.domain.ConcertSeat;
-import booking.api.concert.domain.Reservation;
+import booking.api.concert.domain.*;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -76,6 +72,12 @@ public class ConcertMapper {
                 .name(concert.getName())
                 .host(concert.getHost())
                 .build();
+    }
+
+    public static List<Concert> toDomainList(List<ConcertEntity> entities) {
+        return entities.stream()
+                .map(ConcertMapper::toDomain)
+                .toList();
     }
 
     //reservation

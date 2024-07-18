@@ -1,9 +1,6 @@
 package booking.api.concert.application;
 
-import booking.api.concert.domain.ConcertSchedule;
-import booking.api.concert.domain.ConcertSeat;
-import booking.api.concert.domain.ConcertService;
-import booking.api.concert.domain.Reservation;
+import booking.api.concert.domain.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -15,6 +12,11 @@ import java.util.List;
 public class ConcertFacade {
 
     private final ConcertService concertService;
+
+    //콘서트 조회
+    public List<Concert> searchList() {
+        return concertService.searchList();
+    }
 
     //예약 가능한 콘서트 날짜 조회
     public List<ConcertSchedule> searchSchedules(Long concertId) {

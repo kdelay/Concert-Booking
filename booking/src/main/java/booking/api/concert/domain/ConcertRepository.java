@@ -10,6 +10,8 @@ public interface ConcertRepository {
     //concert
     Concert findByConcertId(Long concertId);
 
+    List<Concert> findAllConcerts();
+
     //concert schedule
     List<ConcertSchedule> findByConcertEntity(Concert concert);
 

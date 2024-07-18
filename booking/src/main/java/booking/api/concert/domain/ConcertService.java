@@ -33,6 +33,14 @@ public class ConcertService {
     private final WaitingTokenRepository waitingTokenRepository;
 
     /**
+     * 콘서트 목록 조회
+     * @return 콘서트 목록
+     */
+    public List<Concert> searchList() {
+        return concertRepository.findAllConcerts();
+    }
+
+    /**
      * 예약 가능한 콘서트 날짜 조회
      * @param concertId 콘서트 PK
      * @return 콘서트 날짜 정보 List : ConcertSchedule

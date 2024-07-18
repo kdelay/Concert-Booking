@@ -41,6 +41,20 @@ class ConcertControllerTest {
     ConcertFacade concertFacade;
 
     @Test
+    @DisplayName("GET /concert/list 콘서트 목록 조회")
+    void searchList() throws Exception {
+
+        List<Concert> concerts = new ArrayList<>(List.of(
+                new Concert(1L, "A 콘서트", "A"),
+                new Concert(2L, "B 콘서트", "B")
+        ));
+        given(concertFacade.searchList()).willReturn(concerts);
+
+        mockMvc.perform(get("/concert/list"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     @DisplayName("GET /concert/schedules/{concertId} 콘서트 예약 가능 날짜 조회")
     void searchSchedules() throws Exception {
 

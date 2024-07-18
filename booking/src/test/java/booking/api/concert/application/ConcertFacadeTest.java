@@ -1,5 +1,6 @@
 package booking.api.concert.application;
 
+import booking.api.concert.domain.Concert;
 import booking.api.concert.domain.ConcertSchedule;
 import booking.api.concert.domain.Reservation;
 import booking.api.concert.domain.enums.ConcertSeatStatus;
@@ -25,6 +26,14 @@ class ConcertFacadeTest {
 
     @Autowired
     ConcertFacade concertFacade;
+    
+    @Test
+    @DisplayName("콘서트 목록 조회")
+    void searchList() {
+
+        List<Concert> concerts = concertFacade.searchList();
+        assertThat(concerts).hasSize(2);
+    }
 
     @Test
     @DisplayName("예약 가능한 콘서트 날짜 조회")
