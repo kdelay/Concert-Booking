@@ -1,6 +1,7 @@
 package booking.api.concert.application;
 
 import booking.api.concert.domain.ConcertSchedule;
+import booking.api.concert.domain.ConcertSeat;
 import booking.api.concert.domain.ConcertService;
 import booking.api.concert.domain.Reservation;
 import lombok.RequiredArgsConstructor;
@@ -47,5 +48,10 @@ public class ConcertFacade {
     //콘서트 좌석 임시 배정 시간 및 예약 만료 시간 체크
     public void checkExpiredTimeForSeat() {
         concertService.checkExpiredTimeForSeat();
+    }
+
+    //결제
+    public ConcertSeat pay(Long concertSeatId, Long reservationId) {
+        return concertService.pay(concertSeatId, reservationId);
     }
 }

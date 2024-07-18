@@ -4,6 +4,7 @@ import booking.api.concert.domain.ConcertSchedule;
 import booking.api.concert.domain.Reservation;
 import booking.api.concert.domain.enums.ConcertSeatStatus;
 import booking.api.concert.presentation.response.SearchSeatsResponse;
+import booking.common.exception.CustomNotFoundException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -28,7 +30,6 @@ class ConcertFacadeTest {
     @DisplayName("예약 가능한 콘서트 날짜 조회")
     void searchSchedules() {
 
-        String token = "valid-token";
         long concertId = 1L;
 
         List<ConcertSchedule> schedules = concertFacade.searchSchedules(concertId);
@@ -74,5 +75,17 @@ class ConcertFacadeTest {
         for (Reservation reservation : reservations) {
             assertThat(reservation.getConcertName()).isEqualTo("A 콘서트");
         }
+    }
+
+    @Test
+    @DisplayName("결제하려는 예약이 없는 경우")
+    void pay() {
+
+        long concertSeatId = 1L;
+        long reservationId = 1L;
+
+        assertThatThrownBy(() -> concertFacade.pay(concertSeatId, reservationId))
+                .isInstanceOf(CustomNotFoundException.class)
+                .hasMessage("[RESERVATION_IS_NOT_FOUND] 해당하는 예약이 없습니다.");
     }
 }

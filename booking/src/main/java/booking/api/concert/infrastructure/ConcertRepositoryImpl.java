@@ -4,7 +4,6 @@ import booking.api.concert.Payment;
 import booking.api.concert.domain.*;
 import booking.api.concert.domain.enums.ReservationStatus;
 import booking.common.exception.CustomNotFoundException;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -52,7 +51,8 @@ public class ConcertRepositoryImpl implements ConcertRepository {
     @Override
     public ConcertSeat findBySeatId(Long concertSeatId) {
         return ConcertMapper.seatToDomain(
-                jpaConcertSeatRepository.findById(concertSeatId).orElseThrow(() -> new EntityNotFoundException("해당하는 좌석이 없습니다."))
+                jpaConcertSeatRepository.findById(concertSeatId)
+                        .orElseThrow(() -> new CustomNotFoundException(CONCERT_SEAT_IS_NOT_FOUND, "해당하는 좌석이 없습니다."))
         );
     }
 
@@ -86,7 +86,8 @@ public class ConcertRepositoryImpl implements ConcertRepository {
 
     @Override
     public Reservation findByReservationId(Long reservationId) {
-        return ConcertMapper.reservationToDomain(jpaReservationRepository.findById(reservationId).orElseThrow(() -> new EntityNotFoundException("해당하는 예약이 없습니다.")));
+        return ConcertMapper.reservationToDomain(jpaReservationRepository.findById(reservationId)
+                .orElseThrow(() -> new CustomNotFoundException(RESERVATION_IS_NOT_FOUND, "해당하는 예약이 없습니다.")));
     }
 
     @Override
@@ -100,12 +101,12 @@ public class ConcertRepositoryImpl implements ConcertRepository {
     }
 
     /**
-     * @param reservation 예약 객체
-     * @return 결제 객체
+     * @param reservation 예약 정보
+     * @return 결제 정보
      */
     @Override
     public Payment findPaymentByReservation(Reservation reservation) {
-        return ConcertMapper.paymentToDomain(jpaPaymentRepository.findByReservationEntity(reservation));
+        return ConcertMapper.paymentToDomain(jpaPaymentRepository.findByReservationEntity(ConcertMapper.reservationToEntity(reservation)));
     }
 
     @Override

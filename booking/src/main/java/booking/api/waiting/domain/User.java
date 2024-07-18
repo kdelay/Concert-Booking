@@ -19,8 +19,23 @@ public class User {
         return new User(id, amount);
     }
 
-    public User chargeAmount(BigDecimal amountToAdd) {
-        this.amount = this.amount.add(amountToAdd);
+    /**
+     * 잔액 충전
+     * @param amount 충전 금액
+     * @return 유저 객체
+     */
+    public User chargeAmount(BigDecimal amount) {
+        this.amount = this.amount.add(amount);
+        return this;
+    }
+
+    /**
+     * 잔액 차감
+     * @param amount 차감 금액
+     * @return 유저 객체
+     */
+    public User useAmount(BigDecimal amount) {
+        this.amount = this.amount.subtract(amount);
         return this;
     }
 }

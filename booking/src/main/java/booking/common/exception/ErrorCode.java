@@ -23,7 +23,10 @@ public enum ErrorCode {
     //concert seat
     CONCERT_SEAT_ALL_RESERVED("매진되었습니다."),
     CONCERT_SEAT_IS_NOT_AVAILABLE("이미 예약되거나 임시 배정 중인 좌석입니다."),
-    CONCERT_SEAT_IS_NOT_FOUND("좌석 번호가 없습니다.");
+    CONCERT_SEAT_IS_NOT_FOUND("좌석 번호가 없습니다."),
+
+    //reservation
+    RESERVATION_IS_NOT_FOUND("예약이 존재하지 않습니다");
 
     private final String msg;
 }

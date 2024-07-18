@@ -1,6 +1,5 @@
 package booking.common.handler;
 
-import booking.common.exception.AuthorizationException;
 import booking.common.exception.BaseException;
 import booking.common.exception.CustomBadRequestException;
 import booking.common.exception.CustomNotFoundException;
@@ -18,11 +17,6 @@ public class ApiControllerAdvice extends ResponseEntityExceptionHandler {
     @ExceptionHandler(value = Exception.class)
     public ResponseEntity<ErrorResponse> handleException(Exception e) {
         return ResponseEntity.status(500).body(new ErrorResponse("500", e.getMessage()));
-    }
-
-    @ExceptionHandler(value = AuthorizationException.class)
-    public ResponseEntity<ErrorResponse> handleException(AuthorizationException ex) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new ErrorResponse("401", ex.getMessage()));
     }
 
     @ExceptionHandler(value = BaseException.class)

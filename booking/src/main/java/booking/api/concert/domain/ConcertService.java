@@ -7,7 +7,6 @@ import booking.api.waiting.domain.User;
 import booking.api.waiting.domain.WaitingTokenRepository;
 import booking.common.exception.CustomBadRequestException;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -188,45 +187,45 @@ public class ConcertService {
         });
     }
 
+    /**
+     * 결제
+     * @param concertSeatId 콘서트 좌석 PK
+     * @param reservationId 예약 PK
+     * @return 콘서트 좌석 정보
+     */
+    @Transactional(rollbackFor = {Exception.class})
     public ConcertSeat pay(Long concertSeatId, Long reservationId) {
 
         //예약 정보 가져오기
         Reservation reservation = concertRepository.findByReservationId(reservationId);
 
-        //예약 만료 시간 확인
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime expiryTime = reservation.getCreatedAt().plusSeconds(10); //예약 만료 시간(예시: 10초)
-
-        if (now.isAfter(expiryTime)) {
-            throw new RuntimeException("Reservation expired");
-        }
-
         //유저 잔액 확인 및 결제 처리
         Long userId = reservation.getUserId();
         User user = waitingTokenRepository.findByUserId(userId);
-        BigDecimal totalAmount = reservation.getTotalAmount();
+        Payment payment = concertRepository.findPaymentByReservation(reservation);
+
+        BigDecimal totalAmount = payment.getPrice();
         BigDecimal userAmount = user.getAmount();
 
         if (userAmount.compareTo(totalAmount) < 0) {
             throw new IllegalStateException("잔액이 부족합니다.");
         }
 
-        //결제 처리
-        user.chargeAmount(totalAmount.negate()); //유저 잔액에서 결제 금액 차감
+        //유저 잔액에서 결제 금액 차감
+        user.useAmount(totalAmount);
         waitingTokenRepository.saveUser(user);
 
-        //Payment 추가
-        Payment payment = Payment.create(reservation, totalAmount);
+        //Payment 상태 변경
         payment.updatePaymentStatus(COMPLETED);
         concertRepository.savePayment(payment);
 
         //ConcertSeat 상태 변경
         ConcertSeat concertSeat = concertRepository.findBySeatId(concertSeatId);
-        concertSeat.updateSeatStatus(ConcertSeatStatus.RESERVED); //예약된 상태로 변경
+        concertSeat.updateSeatStatus(ConcertSeatStatus.RESERVED);
         concertRepository.saveConcertSeat(concertSeat);
 
         //Reservation 상태 변경
-        reservation.updateReservationStatus(RESERVED); //예약된 상태로 변경
+        reservation.updateReservationStatus(RESERVED);
         concertRepository.saveReservation(reservation);
 
         return concertSeat;

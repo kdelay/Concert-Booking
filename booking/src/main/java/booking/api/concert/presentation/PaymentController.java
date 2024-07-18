@@ -1,7 +1,7 @@
 package booking.api.concert.presentation;
 
+import booking.api.concert.application.ConcertFacade;
 import booking.api.concert.domain.ConcertSeat;
-import booking.api.concert.domain.ConcertService;
 import booking.api.concert.presentation.request.PayRequest;
 import booking.api.concert.presentation.response.PayResponse;
 import booking.support.Authorization;
@@ -16,12 +16,12 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class PaymentController {
 
-    private final ConcertService concertService;
+    private final ConcertFacade concertFacade;
 
     @Authorization
     @PostMapping
     public PayResponse pay(@RequestBody PayRequest request) {
-        ConcertSeat concertSeat = concertService.pay(request.concertSeatId(), request.reservationId());
+        ConcertSeat concertSeat = concertFacade.pay(request.concertSeatId(), request.reservationId());
         return new PayResponse(concertSeat.getSeatNumber());
     }
 }
