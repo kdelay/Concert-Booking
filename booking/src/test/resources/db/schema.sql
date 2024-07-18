@@ -72,7 +72,7 @@ CREATE TABLE IF NOT EXISTS payment (
     id BIGINT NOT NULL AUTO_INCREMENT COMMENT '콘서트 결제 PK',
     reservation_id BIGINT COMMENT '콘서트 예약 PK',
     price DECIMAL(7,0) COMMENT '결제 금액',
-    payment_state ENUM('CANCELED','COMPLETED') COMMENT '결제 상태',
+    payment_state ENUM('PENDING', 'CANCELED','COMPLETED') COMMENT '결제 상태',
     created_at DATETIME(6) COMMENT '콘서트 결제 요청 시간',
     modified_at DATETIME(6) COMMENT '상태 변경 시간',
     PRIMARY KEY (id),

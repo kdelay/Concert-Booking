@@ -12,8 +12,8 @@ public class ConcertSeat {
     private final Long id;
     private final Concert concert;
     private final ConcertSchedule concertSchedule;
-    private final Long userId;
-    private final int seatNumber;
+    private Long userId;
+    private int seatNumber;
     private final BigDecimal seatPrice;
     private ConcertSeatStatus seatStatus;
     private final LocalDateTime modifiedAt;
@@ -37,5 +37,13 @@ public class ConcertSeat {
      */
     public void updateSeatStatus(ConcertSeatStatus seatStatus) {
         this.seatStatus = seatStatus;
+    }
+
+    /**
+     * 유저 PK 설정
+     * @param userId 유저 PK
+     */
+    public void setUserId(long userId) {
+        this.userId = userId;
     }
 }

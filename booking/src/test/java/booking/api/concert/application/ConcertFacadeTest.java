@@ -1,6 +1,7 @@
 package booking.api.concert.application;
 
 import booking.api.concert.domain.ConcertSchedule;
+import booking.api.concert.domain.Reservation;
 import booking.api.concert.domain.enums.ConcertSeatStatus;
 import booking.api.concert.presentation.response.SearchSeatsResponse;
 import org.junit.jupiter.api.DisplayName;
@@ -42,7 +43,6 @@ class ConcertFacadeTest {
     @DisplayName("콘서트 날짜와 일치하는 예약 가능한 좌석 조회")
     void searchSeats() {
 
-        String token = "valid-token";
         long concertScheduleId = 1L;
         LocalDate concertDate = LocalDate.parse("2024-07-10");
 
@@ -57,5 +57,22 @@ class ConcertFacadeTest {
             result.add(new SearchSeatsResponse(seatNumber, price, status));
         }
         assertThat(result.size()).isEqualTo(50);
+    }
+
+    @Test
+    @DisplayName("콘서트 좌석 예약 및 결제 정보 저장")
+    void bookingSeats() {
+
+        long userId = 1L;
+        long concertScheduleId = 1L;
+        LocalDate concertDate = LocalDate.parse("2024-07-10");
+        List<Integer> concertSeatNumbers = List.of(1, 2, 3);
+
+        List<Reservation> reservations = concertFacade.bookingSeats(userId, concertScheduleId, concertDate, concertSeatNumbers);
+        assertThat(reservations.size()).isEqualTo(3);
+
+        for (Reservation reservation : reservations) {
+            assertThat(reservation.getConcertName()).isEqualTo("A 콘서트");
+        }
     }
 }

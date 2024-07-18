@@ -34,9 +34,15 @@ public class ConcertMapper {
 
     //concert seat
     public static ConcertSeat seatToDomain(ConcertSeatEntity entity) {
-        return new ConcertSeat(entity.getId(), ConcertMapper.toDomain(entity.getConcertEntity()),
-                ConcertMapper.scheduleToDomain(entity.getConcertScheduleEntity()), entity.getUserId(),
-                entity.getSeatNumber(), entity.getSeatPrice(), entity.getSeatStatus(), entity.getModifiedAt(), entity.getExpiredAt());
+        return new ConcertSeat(entity.getId(),
+                ConcertMapper.toDomain(entity.getConcertEntity()),
+                ConcertMapper.scheduleToDomain(entity.getConcertScheduleEntity()),
+                entity.getUserId(),
+                entity.getSeatNumber(),
+                entity.getSeatPrice(),
+                entity.getSeatStatus(),
+                entity.getModifiedAt(),
+                entity.getExpiredAt());
     }
 
     public static ConcertSeatEntity seatToEntity(ConcertSeat concertSeat) {
@@ -45,6 +51,7 @@ public class ConcertMapper {
                 .concertEntity(ConcertMapper.toEntity(concertSeat.getConcert()))
                 .concertScheduleEntity(ConcertMapper.scheduleToEntity(concertSeat.getConcertSchedule()))
                 .userId(concertSeat.getUserId())
+                .seatNumber(concertSeat.getSeatNumber())
                 .seatPrice(concertSeat.getSeatPrice())
                 .seatStatus(concertSeat.getSeatStatus())
                 .modifiedAt(concertSeat.getModifiedAt())

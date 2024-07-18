@@ -7,6 +7,7 @@ import booking.api.waiting.domain.User;
 import booking.api.waiting.domain.WaitingTokenRepository;
 import booking.common.exception.CustomBadRequestException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -116,8 +117,6 @@ public class ConcertService {
         ConcertSchedule concertSchedule = concertRepository.findByScheduleIdAndConcertDate(concertScheduleId, concertDate);
         //콘서트 정보
         Concert concert = concertSchedule.getConcert();
-        System.out.println("###concert.getId() = " + concert.getId());
-        System.out.println("###concertSchedule = " + concertSchedule.getId());
 
         //예약하고자 하는 좌석 리스트
         List<ConcertSeat> concertSeats = seatNumberList.stream()
@@ -131,28 +130,28 @@ public class ConcertService {
             if (seat.getSeatStatus() != AVAILABLE) {
                 throw new CustomBadRequestException(CONCERT_SEAT_IS_NOT_AVAILABLE, "이미 예약되거나 임시 배정 중인 좌석입니다.");
             }
-            //임시 배정 상태로 변경
+            //임시 배정 상태로 변경 및 유저 PK 추가
             seat.updateSeatStatus(TEMPORARY);
+            seat.setUserId(userId);
             concertRepository.saveConcertSeat(seat);
 
-            //예약 데이터 추가
-            reservations.add(Reservation.create(seat.getId(), userId, concert.getName(), concertDate));
-
-            //금액 데이터 추가
-            prices.add(seat.getSeatPrice());
-        }
-
-        for (int i = 0; i < reservations.size(); i++) {
-            //총 금액
-            reservations.get(i).setTotalPrice(prices.get(i));
-
-            //예약 데이터 저장
-            concertRepository.saveReservation(reservations.get(i));
-
-            //결제 데이터 추가
-            concertRepository.savePayment(Payment.create(reservations.get(i), prices.get(i)));
+            Reservation reservation = Reservation.create(seat.getId(), userId, concert.getName(), concertDate);
+            reservations.add(reservation);
+            BigDecimal price = seat.getSeatPrice();
+            reservation.setTotalPrice(price);
         }
         return reservations;
+    }
+
+    /**
+     * 결제 정보 저장
+     * @param reservation 예약 객체
+     * @param totalPrice 결제 총 금액
+     */
+    public void savePayment(Reservation reservation, BigDecimal totalPrice) {
+        //결제 정보 저장
+        Payment payment = Payment.create(reservation, totalPrice);
+        concertRepository.savePayment(payment);
     }
 
     /**
@@ -176,12 +175,15 @@ public class ConcertService {
             if (duration.toSeconds() > 60) {
                 //예약 취소
                 reservation.updateReservationStatus(CANCELED);
+                concertRepository.saveReservation(reservation);
                 //결제 취소
                 Payment payment = concertRepository.findPaymentByReservation(reservation);
                 payment.updatePaymentStatus(PaymentState.CANCELED);
+                concertRepository.savePayment(payment);
                 //좌석 임시 배정 취소 -> 예약 가능 상태로 변경
                 ConcertSeat concertSeat = concertRepository.findBySeatId(reservation.getConcertSeatId());
                 concertSeat.updateSeatStatus(AVAILABLE);
+                concertRepository.saveConcertSeat(concertSeat);
             }
         });
     }

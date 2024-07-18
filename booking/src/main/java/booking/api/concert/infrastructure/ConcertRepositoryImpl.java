@@ -75,7 +75,7 @@ public class ConcertRepositoryImpl implements ConcertRepository {
         return ConcertMapper.seatToDomain(
                 jpaConcertSeatRepository.findByConcertAndScheduleAndSeatNumber(
                         concertId, concertScheduleId, seatNumber)
-                        .orElseThrow(() -> new CustomNotFoundException(CONCERT_SEAT_IS_NOT_FOUND, "[%s] 좌석 번호가 없습니다." + seatNumber))
+                        .orElseThrow(() -> new CustomNotFoundException(CONCERT_SEAT_IS_NOT_FOUND, "[%d] 좌석 번호가 없습니다.".formatted(seatNumber)))
         );
     }
 
