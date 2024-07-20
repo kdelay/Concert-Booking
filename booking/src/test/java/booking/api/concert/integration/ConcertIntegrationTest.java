@@ -178,25 +178,20 @@ public class ConcertIntegrationTest {
         Thread.sleep(60000);
 
         for (Reservation reservation : reservations) {
-            System.out.println("reservation = " + reservation);
             //예약 취소 검증
             ReservationStatus reservationStatus = concertRepository.findByReservationId(reservation.getId()).getReservationStatus();
-            System.out.println("reservationStatus = " + reservationStatus);
             assertThat(reservationStatus).isEqualTo(ReservationStatus.CANCELED);
 
             //결제 취소 검증
             PaymentState paymentState = concertRepository.findPaymentByReservation(reservation).getPaymentState();
-            System.out.println("paymentState = " + paymentState);
             assertThat(paymentState).isEqualTo(PaymentState.CANCELED);
 
             //좌석 예약 가능 상태 검증
             ConcertSeatStatus seatStatus = concertRepository.findBySeatId(reservation.getConcertSeatId()).getSeatStatus();
-            System.out.println("seatStatus = " + seatStatus);
             assertThat(seatStatus).isEqualTo(ConcertSeatStatus.AVAILABLE);
 
             //대기열 토큰 만료 검증
             WaitingTokenStatus waitingTokenStatus = waitingTokenRepository.findUsingTokenByUserId(reservation.getUserId()).getWaitingTokenStatus();
-            System.out.println("waitingTokenStatus = " + waitingTokenStatus);
             assertThat(waitingTokenStatus).isEqualTo(WaitingTokenStatus.EXPIRED);
         }
     }
