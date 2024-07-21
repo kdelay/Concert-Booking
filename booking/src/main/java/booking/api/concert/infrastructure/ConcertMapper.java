@@ -1,18 +1,17 @@
 package booking.api.concert.infrastructure;
 
-import booking.api.concert.Payment;
-import booking.api.concert.domain.Concert;
-import booking.api.concert.domain.ConcertSchedule;
-import booking.api.concert.domain.ConcertSeat;
-import booking.api.concert.domain.Reservation;
+import booking.api.concert.domain.*;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class ConcertMapper {
 
+    //concert schedule
     public static ConcertSchedule scheduleToDomain(ConcertScheduleEntity entity) {
-        return ConcertSchedule.create(entity.getId(), ConcertMapper.toDomain(entity.getConcertEntity()), entity.getConcertDate());
+        return ConcertSchedule.create(entity.getId(),
+                ConcertMapper.toDomain(entity.getConcertEntity()),
+                entity.getConcertDate());
     }
 
     public static ConcertScheduleEntity scheduleToEntity(ConcertSchedule concertSchedule) {
@@ -29,10 +28,17 @@ public class ConcertMapper {
                 .collect(Collectors.toList());
     }
 
+    //concert seat
     public static ConcertSeat seatToDomain(ConcertSeatEntity entity) {
-        return ConcertSeat.create(entity.getId(), ConcertMapper.toDomain(entity.getConcertEntity()),
-                ConcertMapper.scheduleToDomain(entity.getConcertScheduleEntity()), entity.getUserId(),
-                entity.getSeatNumber(), entity.getSeatPrice(), entity.getSeatStatus(), entity.getModifiedAt(), entity.getExpiredAt());
+        return new ConcertSeat(entity.getId(),
+                ConcertMapper.toDomain(entity.getConcertEntity()),
+                ConcertMapper.scheduleToDomain(entity.getConcertScheduleEntity()),
+                entity.getUserId(),
+                entity.getSeatNumber(),
+                entity.getSeatPrice(),
+                entity.getSeatStatus(),
+                entity.getModifiedAt(),
+                entity.getExpiredAt());
     }
 
     public static ConcertSeatEntity seatToEntity(ConcertSeat concertSeat) {
@@ -41,6 +47,7 @@ public class ConcertMapper {
                 .concertEntity(ConcertMapper.toEntity(concertSeat.getConcert()))
                 .concertScheduleEntity(ConcertMapper.scheduleToEntity(concertSeat.getConcertSchedule()))
                 .userId(concertSeat.getUserId())
+                .seatNumber(concertSeat.getSeatNumber())
                 .seatPrice(concertSeat.getSeatPrice())
                 .seatStatus(concertSeat.getSeatStatus())
                 .modifiedAt(concertSeat.getModifiedAt())
@@ -54,6 +61,7 @@ public class ConcertMapper {
                 .collect(Collectors.toList());
     }
 
+    //concert
     public static Concert toDomain(ConcertEntity entity) {
         return Concert.create(entity.getId(), entity.getName(), entity.getHost());
     }
@@ -66,8 +74,15 @@ public class ConcertMapper {
                 .build();
     }
 
+    public static List<Concert> toDomainList(List<ConcertEntity> entities) {
+        return entities.stream()
+                .map(ConcertMapper::toDomain)
+                .toList();
+    }
+
+    //reservation
     public static Reservation reservationToDomain(ReservationEntity entity) {
-        return Reservation.create(entity.getId(), entity.getConcertSeatId(), entity.getUserId(), entity.getConcertName(),
+        return new Reservation(entity.getId(), entity.getConcertSeatId(), entity.getUserId(), entity.getConcertName(),
                 entity.getConcertDate(), entity.getReservationStatus(), entity.getCreatedAt(), entity.getModifiedAt());
     }
 
@@ -84,8 +99,19 @@ public class ConcertMapper {
                 .build();
     }
 
+    /**
+     * @param entities 예약 Entity
+     * @return Domain List
+     */
+    public static List<Reservation> reservationToDomainList(List<ReservationEntity> entities) {
+        return entities.stream()
+                .map(ConcertMapper::reservationToDomain)
+                .collect(Collectors.toList());
+    }
+
+    //payment
     public static Payment paymentToDomain(PaymentEntity entity) {
-        return Payment.create(entity.getId(), ConcertMapper.reservationToDomain(entity.getReservationEntity()), entity.getPrice(),
+        return new Payment(entity.getId(), ConcertMapper.reservationToDomain(entity.getReservationEntity()), entity.getPrice(),
                 entity.getPaymentState(), entity.getCreatedAt(), entity.getModifiedAt());
     }
 

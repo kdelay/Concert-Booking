@@ -3,6 +3,8 @@ package booking.api.waiting.infrastructure;
 import booking.api.waiting.domain.User;
 import booking.api.waiting.domain.WaitingToken;
 
+import java.util.List;
+
 public class WaitingTokenMapper {
 
     public static User userToDomain(UserEntity entity) {
@@ -16,8 +18,14 @@ public class WaitingTokenMapper {
                 .build();
     }
 
+    public static List<User> userToDomainList(List<UserEntity> entities) {
+        return entities.stream()
+                .map(WaitingTokenMapper::userToDomain)
+                .toList();
+    }
+
     public static WaitingToken toDomain(WaitingTokenEntity entity) {
-        return WaitingToken.create(
+        return new WaitingToken(
                 entity.getId(),
                 UserMapper.toDomain(entity.getUserEntity()),
                 entity.getToken(),
@@ -36,5 +44,11 @@ public class WaitingTokenMapper {
                 .createdAt(waitingToken.getCreatedAt())
                 .modifiedAt(waitingToken.getModifiedAt())
                 .build();
+    }
+
+    public static List<WaitingToken> toDomainList(List<WaitingTokenEntity> entities) {
+        return entities.stream()
+                .map(WaitingTokenMapper::toDomain)
+                .toList();
     }
 }

@@ -12,8 +12,8 @@ public class ConcertSeat {
     private final Long id;
     private final Concert concert;
     private final ConcertSchedule concertSchedule;
-    private final Long userId;
-    private final int seatNumber;
+    private Long userId;
+    private int seatNumber;
     private final BigDecimal seatPrice;
     private ConcertSeatStatus seatStatus;
     private final LocalDateTime modifiedAt;
@@ -31,11 +31,19 @@ public class ConcertSeat {
         this.expiredAt = expiredAt;
     }
 
-    public static ConcertSeat create(Long id, Concert concert, ConcertSchedule concertSchedule, Long userId, int seatNumber, BigDecimal seatPrice, ConcertSeatStatus seatStatus, LocalDateTime modifiedAt, LocalDateTime expiredAt) {
-        return new ConcertSeat(id, concert, concertSchedule, userId, seatNumber, seatPrice, seatStatus, modifiedAt, expiredAt);
-    }
-
+    /**
+     * 좌석 상태 변경
+     * @param seatStatus 상태 (AVAILABLE, TEMPORARY, RESERVED)
+     */
     public void updateSeatStatus(ConcertSeatStatus seatStatus) {
         this.seatStatus = seatStatus;
+    }
+
+    /**
+     * 유저 PK 설정
+     * @param userId 유저 PK
+     */
+    public void setUserId(long userId) {
+        this.userId = userId;
     }
 }

@@ -1,6 +1,5 @@
-package booking.api.concert;
+package booking.api.concert.domain;
 
-import booking.api.concert.domain.Reservation;
 import booking.api.concert.domain.enums.PaymentState;
 import lombok.Getter;
 
@@ -26,7 +25,21 @@ public class Payment {
         this.modifiedAt = modifiedAt;
     }
 
-    public static Payment create(Long id, Reservation reservation, BigDecimal price, PaymentState paymentState, LocalDateTime createdAt, LocalDateTime modifiedAt) {
-        return new Payment(id, reservation, price, paymentState, createdAt, modifiedAt);
+    /**
+     * 새로운 결제 데이터 생성
+     * @param reservation 예약 정보
+     * @param price 결제 금액
+     * @return 결제 정보
+     */
+    public static Payment create(Reservation reservation, BigDecimal price) {
+        return new Payment(null, reservation, price, PaymentState.PENDING, LocalDateTime.now(), null);
+    }
+
+    /**
+     * 결제 상태 변경
+     * @param paymentState 결제 상태
+     */
+    public void updatePaymentStatus(PaymentState paymentState) {
+        this.paymentState = paymentState;
     }
 }
