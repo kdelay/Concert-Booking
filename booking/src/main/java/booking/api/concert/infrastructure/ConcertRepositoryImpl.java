@@ -2,14 +2,14 @@ package booking.api.concert.infrastructure;
 
 import booking.api.concert.domain.*;
 import booking.api.concert.domain.enums.ReservationStatus;
-import booking.common.exception.CustomNotFoundException;
+import booking.support.exception.CustomNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.List;
 
-import static booking.common.exception.ErrorCode.*;
+import static booking.support.exception.ErrorCode.*;
 
 @Repository
 @RequiredArgsConstructor

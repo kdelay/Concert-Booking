@@ -1,9 +1,9 @@
-package booking.common.exception;
+package booking.support.exception;
 
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class CustomNotFoundException extends RuntimeException {
+public class CustomBadRequestException extends RuntimeException {
 
     private final ErrorCode errorCode;
     private final String msg;

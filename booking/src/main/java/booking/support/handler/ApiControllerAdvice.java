@@ -1,9 +1,8 @@
-package booking.common.handler;
+package booking.support.handler;
 
-import booking.common.exception.BaseException;
-import booking.common.exception.CustomBadRequestException;
-import booking.common.exception.CustomNotFoundException;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import booking.support.exception.BaseException;
+import booking.support.exception.CustomBadRequestException;
+import booking.support.exception.CustomNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -28,14 +27,12 @@ public class ApiControllerAdvice extends ResponseEntityExceptionHandler {
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(CustomBadRequestException.class)
-    @ApiResponse(responseCode = "400", description = "Bad Request")
     public ApiResultResponse<Object> handleCustomBadRequestException(CustomBadRequestException e) {
         return ApiResultResponse.of(HttpStatus.BAD_REQUEST, e.getMessage(), null);
     }
 
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler(CustomNotFoundException.class)
-    @ApiResponse(responseCode = "404", description = "Not Found")
     public ApiResultResponse<Object> handleCustomNotFoundException(CustomNotFoundException e) {
         return ApiResultResponse.of(HttpStatus.NOT_FOUND, e.getMessage(), null);
     }

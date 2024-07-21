@@ -2,7 +2,7 @@ package booking.api.waiting.application;
 
 import booking.api.waiting.domain.WaitingToken;
 import booking.api.waiting.domain.WaitingTokenStatus;
-import booking.common.exception.CustomNotFoundException;
+import booking.support.exception.CustomNotFoundException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

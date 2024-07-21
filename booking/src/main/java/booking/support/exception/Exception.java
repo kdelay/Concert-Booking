@@ -1,4 +1,4 @@
-package booking.common.exception;
+package booking.support.exception;
 
 import org.springframework.http.HttpStatus;
 

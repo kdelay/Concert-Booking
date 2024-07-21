@@ -5,7 +5,7 @@ import booking.api.concert.domain.ConcertSchedule;
 import booking.api.concert.domain.Reservation;
 import booking.api.concert.domain.enums.ConcertSeatStatus;
 import booking.api.concert.presentation.response.SearchSeatsResponse;
-import booking.common.exception.CustomNotFoundException;
+import booking.support.exception.CustomNotFoundException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,7 +31,7 @@ class ConcertFacadeTest {
     @DisplayName("콘서트 목록 조회")
     void searchList() {
 
-        List<Concert> concerts = concertFacade.searchList();
+        List<Concert> concerts = concertFacade.getList();
         assertThat(concerts).hasSize(2);
     }
 

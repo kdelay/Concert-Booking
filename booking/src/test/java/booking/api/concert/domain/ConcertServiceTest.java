@@ -5,10 +5,10 @@ import booking.api.concert.domain.enums.PaymentState;
 import booking.api.waiting.domain.User;
 import booking.api.waiting.domain.WaitingToken;
 import booking.api.waiting.domain.WaitingTokenRepository;
-import booking.common.exception.CustomBadRequestException;
-import booking.common.exception.CustomNotFoundException;
 import booking.dummy.ConcertSeatDummy;
 import booking.dummy.WaitingTokenDummy;
+import booking.support.exception.CustomBadRequestException;
+import booking.support.exception.CustomNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -73,14 +73,14 @@ class ConcertServiceTest {
 
     @Test
     @DisplayName("콘서트 조회")
-    void searchList() {
+    void getList() {
         List<Concert> concerts = List.of(
             new Concert(1L, "A 콘서트", "A"),
             new Concert(1L, "A 콘서트", "B")
         );
         when(concertRepository.findAllConcerts()).thenReturn(concerts);
 
-        List<Concert> concertList = concertService.searchList();
+        List<Concert> concertList = concertService.getList();
         assertThat(concertList).hasSize(2);
     }
 

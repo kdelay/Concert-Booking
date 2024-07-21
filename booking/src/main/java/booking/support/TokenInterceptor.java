@@ -1,6 +1,6 @@
 package booking.support;
 
-import booking.common.exception.CustomBadRequestException;
+import booking.support.exception.CustomBadRequestException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -10,7 +10,7 @@ import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.resource.ResourceHttpRequestHandler;
 
-import static booking.common.exception.ErrorCode.WAITING_TOKEN_AUTH_FAIL;
+import static booking.support.exception.ErrorCode.WAITING_TOKEN_AUTH_FAIL;
 
 @Slf4j
 @Component

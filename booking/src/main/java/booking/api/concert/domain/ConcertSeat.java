@@ -31,18 +31,10 @@ public class ConcertSeat {
         this.expiredAt = expiredAt;
     }
 
-    /**
-     * 좌석 상태 변경
-     * @param seatStatus 상태 (AVAILABLE, TEMPORARY, RESERVED)
-     */
     public void updateSeatStatus(ConcertSeatStatus seatStatus) {
         this.seatStatus = seatStatus;
     }
 
-    /**
-     * 유저 PK 설정
-     * @param userId 유저 PK
-     */
     public void setUserId(long userId) {
         this.userId = userId;
     }

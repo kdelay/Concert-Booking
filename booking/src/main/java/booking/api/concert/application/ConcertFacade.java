@@ -14,8 +14,8 @@ public class ConcertFacade {
     private final ConcertService concertService;
 
     //콘서트 조회
-    public List<Concert> searchList() {
-        return concertService.searchList();
+    public List<Concert> getList() {
+        return concertService.getList();
     }
 
     //예약 가능한 콘서트 날짜 조회

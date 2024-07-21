@@ -3,13 +3,13 @@ package booking.api.waiting.infrastructure;
 import booking.api.waiting.domain.User;
 import booking.api.waiting.domain.WaitingToken;
 import booking.api.waiting.domain.WaitingTokenRepository;
-import booking.common.exception.CustomNotFoundException;
+import booking.support.exception.CustomNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
-import static booking.common.exception.ErrorCode.USER_IS_NOT_FOUND;
+import static booking.support.exception.ErrorCode.USER_IS_NOT_FOUND;
 
 @Repository
 @RequiredArgsConstructor

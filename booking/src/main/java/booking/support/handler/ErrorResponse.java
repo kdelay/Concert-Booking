@@ -1,4 +1,4 @@
-package booking.common.handler;
+package booking.support.handler;
 
 public record ErrorResponse(
         String code,

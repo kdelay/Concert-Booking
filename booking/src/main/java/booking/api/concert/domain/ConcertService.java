@@ -6,7 +6,7 @@ import booking.api.waiting.domain.User;
 import booking.api.waiting.domain.WaitingToken;
 import booking.api.waiting.domain.WaitingTokenRepository;
 import booking.api.waiting.domain.WaitingTokenStatus;
-import booking.common.exception.CustomBadRequestException;
+import booking.support.exception.CustomBadRequestException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,8 +22,8 @@ import static booking.api.concert.domain.enums.ConcertSeatStatus.AVAILABLE;
 import static booking.api.concert.domain.enums.ConcertSeatStatus.TEMPORARY;
 import static booking.api.concert.domain.enums.PaymentState.COMPLETED;
 import static booking.api.concert.domain.enums.ReservationStatus.*;
-import static booking.common.exception.ErrorCode.CONCERT_SEAT_ALL_RESERVED;
-import static booking.common.exception.ErrorCode.CONCERT_SEAT_IS_NOT_AVAILABLE;
+import static booking.support.exception.ErrorCode.CONCERT_SEAT_ALL_RESERVED;
+import static booking.support.exception.ErrorCode.CONCERT_SEAT_IS_NOT_AVAILABLE;
 
 @Service
 @RequiredArgsConstructor
@@ -36,7 +36,7 @@ public class ConcertService {
      * 콘서트 목록 조회
      * @return 콘서트 목록
      */
-    public List<Concert> searchList() {
+    public List<Concert> getList() {
         return concertRepository.findAllConcerts();
     }
 

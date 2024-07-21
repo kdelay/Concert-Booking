@@ -24,8 +24,8 @@ public class ConcertController {
     private final ConcertFacade concertFacade;
 
     @GetMapping("/list")
-    public List<Concert> searchList() {
-        return concertFacade.searchList();
+    public List<Concert> getList() {
+        return concertFacade.getList();
     }
 
     @Authorization

@@ -1,4 +1,4 @@
-package booking.common.handler;
+package booking.support.handler;
 
 import org.springframework.http.HttpStatus;
 

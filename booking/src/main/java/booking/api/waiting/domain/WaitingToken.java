@@ -1,6 +1,6 @@
 package booking.api.waiting.domain;
 
-import booking.common.exception.CustomNotFoundException;
+import booking.support.exception.CustomNotFoundException;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
@@ -8,7 +8,8 @@ import java.time.ZoneId;
 import java.util.UUID;
 
 import static booking.api.waiting.domain.WaitingTokenStatus.DEACTIVATE;
-import static booking.common.exception.ErrorCode.*;
+import static booking.support.exception.ErrorCode.USER_IS_NOT_FOUND;
+import static booking.support.exception.ErrorCode.WAITING_TOKEN_IS_NOT_FOUND;
 
 @Getter
 public class WaitingToken {

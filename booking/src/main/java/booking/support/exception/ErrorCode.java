@@ -1,4 +1,4 @@
-package booking.common.exception;
+package booking.support.exception;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

@@ -2,9 +2,9 @@ package booking.api.waiting.domain;
 
 import booking.api.concert.domain.Concert;
 import booking.api.concert.domain.ConcertRepository;
-import booking.common.exception.CustomNotFoundException;
 import booking.dummy.UserDummy;
 import booking.dummy.WaitingTokenDummy;
+import booking.support.exception.CustomNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -19,7 +19,7 @@ import java.util.List;
 
 import static booking.api.waiting.domain.WaitingTokenStatus.ACTIVATE;
 import static booking.api.waiting.domain.WaitingTokenStatus.DEACTIVATE;
-import static booking.common.exception.ErrorCode.USER_IS_NOT_FOUND;
+import static booking.support.exception.ErrorCode.USER_IS_NOT_FOUND;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
