@@ -34,11 +34,10 @@ public class ConcertFacade {
     }
 
     public List<Reservation> bookingSeats(long userId, long concertScheduleId, LocalDate concertDate, List<Integer> seatNumberList) {
-        List<Reservation> reservations = concertService.bookingSeats(userId, concertScheduleId, concertDate, seatNumberList);
-        for (Reservation reservation : reservations) {
-            concertService.savePayment(reservation, reservation.getTotalAmount());
-        }
-        return reservations;
+        return concertService.bookingSeats(userId, concertScheduleId, concertDate, seatNumberList)
+                .stream()
+                .peek(reservation -> concertService.savePayment(reservation, reservation.getTotalAmount()))
+                .toList();
     }
 
     public void checkExpiredTimeForSeat() {

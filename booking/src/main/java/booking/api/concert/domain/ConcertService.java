@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDate;
@@ -60,11 +61,9 @@ public class ConcertService {
      * @return 콘서트 날짜 리스트 배열 반환
      */
     public List<LocalDate> getConcertScheduleDates(List<ConcertSchedule> schedules) {
-        List<LocalDate> dates = new ArrayList<>();
-        for (ConcertSchedule schedule : schedules) {
-            dates.add(schedule.getConcertDate());
-        }
-        return dates;
+        return schedules.stream()
+                .map(ConcertSchedule::getConcertDate)
+                .toList();
     }
 
     /**
@@ -72,11 +71,9 @@ public class ConcertService {
      * @return 콘서트 날짜 PK 리스트 배열 반환
      */
     public List<Long> getConcertScheduleId(List<ConcertSchedule> schedules) {
-        List<Long> idList = new ArrayList<>();
-        for (ConcertSchedule schedule : schedules) {
-            idList.add(schedule.getId());
-        }
-        return idList;
+        return schedules.stream()
+                .map(ConcertSchedule::getId)
+                .toList();
     }
 
     /**
@@ -95,19 +92,22 @@ public class ConcertService {
         List<List<Object>> seats = new ArrayList<>();
 
         List<ConcertSeat> concertSeats = concertRepository.findByConcertAndSchedule(concertSchedule.getConcert(), concertSchedule)
-                .stream().filter(seat -> seat.getSeatStatus() == AVAILABLE).toList();
+                .stream()
+                .filter(seat -> seat.getSeatStatus() == AVAILABLE)
+                .toList();
 
         //예약 가능한 콘서트 좌석이 없는 경우 예약할 수 없다.
         if (concertSeats.isEmpty()) throw new CustomBadRequestException(CONCERT_SEAT_ALL_RESERVED, "매진되었습니다.");
 
-        for (ConcertSeat concertSeat : concertSeats) {
-            List<Object> seatInfo = new ArrayList<>();
-            seatInfo.add(concertSeat.getSeatNumber());
-            seatInfo.add(concertSeat.getSeatPrice());
-            seatInfo.add(concertSeat.getSeatStatus().name());
-            seats.add(seatInfo);
-        }
-        return seats;
+        return concertSeats.stream()
+                .map(seat -> {
+                    List<Object> seatInfo = new ArrayList<>();
+                    seatInfo.add(seat.getSeatNumber());
+                    seatInfo.add(seat.getSeatPrice());
+                    seatInfo.add(seat.getSeatStatus().name());
+                    return seatInfo;
+                })
+                .toList();
     }
 
     /**
@@ -131,23 +131,23 @@ public class ConcertService {
                 .map(seatNumber -> concertRepository.findByConcertAndScheduleAndSeatNumber(concert.getId(), concertSchedule.getId(), seatNumber))
                 .toList();
 
-        List<Reservation> reservations = new ArrayList<>();
-        for (ConcertSeat seat : concertSeats) {
-            //예약 가능한 좌석 상태인지 검증
-            if (seat.getSeatStatus() != AVAILABLE) {
-                throw new CustomBadRequestException(CONCERT_SEAT_IS_NOT_AVAILABLE, "이미 예약되거나 임시 배정 중인 좌석입니다.");
-            }
-            //임시 배정 상태로 변경 및 유저 PK 추가
-            seat.updateSeatStatus(TEMPORARY);
-            seat.setUserId(userId);
-            concertRepository.saveConcertSeat(seat);
+        return concertSeats.stream()
+                .map(seat -> {
+                    //예약 가능한 좌석 상태인지 검증
+                    if (seat.getSeatStatus() != AVAILABLE) {
+                        throw new CustomBadRequestException(CONCERT_SEAT_IS_NOT_AVAILABLE, "이미 예약되거나 임시 배정 중인 좌석입니다.");
+                    }
+                    //임시 배정 상태로 변경 및 유저 PK 추가
+                    seat.updateSeatStatus(TEMPORARY);
+                    seat.setUserId(userId);
+                    concertRepository.saveConcertSeat(seat);
 
-            Reservation reservation = Reservation.create(seat.getId(), userId, concert.getName(), concertDate);
-            reservations.add(reservation);
-            BigDecimal price = seat.getSeatPrice();
-            reservation.setTotalPrice(price);
-        }
-        return reservations;
+                    Reservation reservation = Reservation.create(seat.getId(), userId, concert.getName(), concertDate);
+                    BigDecimal price = seat.getSeatPrice();
+                    reservation.setTotalPrice(price);
+                    return reservation;
+                })
+                .toList();
     }
 
     /**
