@@ -11,7 +11,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDate;
@@ -196,8 +195,8 @@ public class ConcertService {
                     concertSeat.updateSeatStatus(AVAILABLE);
                     concertRepository.saveConcertSeat(concertSeat);
                     //대기열 토큰 만료
-                    WaitingToken waitingToken = waitingTokenRepository.findUsingTokenByUserId(reservation.getUserId());
-                    waitingToken.updateWaitingTokenStatus(WaitingTokenStatus.EXPIRED);
+                    WaitingToken waitingToken = waitingTokenRepository.findNotExpiredToken(reservation.getUserId());
+                    waitingToken.updateStatus(WaitingTokenStatus.EXPIRED);
                     waitingTokenRepository.save(waitingToken);
                 }
             }

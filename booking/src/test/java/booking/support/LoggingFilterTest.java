@@ -1,61 +1,51 @@
 package booking.support;
 
-import booking.api.waiting.application.WaitingTokenFacade;
-import booking.api.waiting.domain.User;
-import booking.api.waiting.domain.WaitingToken;
-import booking.api.waiting.domain.WaitingTokenStatus;
 import booking.api.waiting.presentation.WaitingTokenRequest;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import booking.api.waiting.presentation.WaitingTokenResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.annotation.Import;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.http.*;
+import org.springframework.test.context.ActiveProfiles;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 
-import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-@SpringBootTest
-@AutoConfigureMockMvc
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Import(LoggingFilter.class)
+@ActiveProfiles("test")
 class LoggingFilterTest {
 
-    @Autowired
-    MockMvc mockMvc;
+    @LocalServerPort
+    private int port;
 
     @Autowired
-    ObjectMapper objectMapper;
-
-    @MockBean
-    WaitingTokenFacade waitingTokenFacade;
+    private TestRestTemplate restTemplate;
 
     @Test
     @DisplayName("POST /waiting/token 대기열 토큰 발급 및 조회 - Filter 적용")
-    public void filterWaitingToken() throws Exception {
+    public void filterWaitingToken() {
 
-        String token = "valid-token";
+        WaitingTokenRequest request = new WaitingTokenRequest(1L);
 
-        User user = new User(1L, BigDecimal.ZERO);
-        WaitingToken waitingToken = new WaitingToken(1L, user, token, WaitingTokenStatus.DEACTIVATE, LocalDateTime.now(), null);
-        given(waitingTokenFacade.issueTokenOrSearchWaiting(1L, 1L)).willReturn(waitingToken);
-        given(waitingTokenFacade.getRank(1L)).willReturn(0L);
+        ResponseEntity<WaitingTokenResponse> responseEntity = restTemplate.postForEntity(
+                "http://localhost:" + port + "/waiting/token",
+                createHttpEntityWithToken(request, "valid-token"),
+                WaitingTokenResponse.class);
 
-        WaitingTokenRequest waitingTokenRequest = new WaitingTokenRequest(1L, 1L);
-        String req = objectMapper.writeValueAsString(waitingTokenRequest);
-
-        mockMvc.perform(post("/waiting/token")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(req)
-                        .header("Authorization", token))
-                .andExpect(status().isOk());
+        assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
+        WaitingTokenResponse responseBody = responseEntity.getBody();
+        assertThat(responseBody).isNotNull();
     }
 
+    private HttpEntity<WaitingTokenRequest> createHttpEntityWithToken(WaitingTokenRequest request, String token) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set(AUTHORIZATION, "Bearer " + token);
+        return new HttpEntity<>(request, headers);
+    }
 }

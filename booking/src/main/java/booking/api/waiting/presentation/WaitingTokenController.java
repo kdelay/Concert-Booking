@@ -1,7 +1,7 @@
 package booking.api.waiting.presentation;
 
-import booking.api.waiting.application.WaitingTokenFacade;
 import booking.api.waiting.domain.WaitingToken;
+import booking.api.waiting.domain.WaitingTokenService;
 import booking.support.Authorization;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/waiting/token")
 public class WaitingTokenController {
 
-    private final WaitingTokenFacade waitingTokenFacade;
+    private final WaitingTokenService waitingTokenService;
 
     /**
      * 대기열 토큰 발급 및 조회
@@ -26,8 +26,8 @@ public class WaitingTokenController {
     public WaitingTokenResponse issueTokenOrSearchWaiting(
             @RequestBody WaitingTokenRequest waitingTokenRequest
     ) {
-        WaitingToken result = waitingTokenFacade.issueTokenOrSearchWaiting(waitingTokenRequest.userId(), waitingTokenRequest.concertId());
-        long rank = waitingTokenFacade.getRank(result.getId());
+        WaitingToken result = waitingTokenService.issueToken(waitingTokenRequest.userId());
+        long rank = waitingTokenService.getRank(result.getId());
         return WaitingTokenResponse.of(result, rank+1);
     }
 }

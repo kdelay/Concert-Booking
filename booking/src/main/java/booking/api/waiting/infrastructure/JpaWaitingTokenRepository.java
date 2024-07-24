@@ -15,13 +15,13 @@ public interface JpaWaitingTokenRepository extends JpaRepository<WaitingTokenEnt
      */
     @Query("select wt from WaitingTokenEntity wt where wt.userEntity.id = :userId " +
             "and wt.waitingTokenStatus <> 'EXPIRED' order by wt.createdAt desc")
-    Optional<WaitingTokenEntity> findUsingTokenByUserId(@Param("userId") Long userId);
+    Optional<WaitingTokenEntity> findNotExpiredToken(@Param("userId") Long userId);
 
     /**
      * @return 토큰이 ACTIVATE 상태인 가장 최신 id 번호 반환, 없는 경우 1 반환
      */
     @Query("select coalesce(max(wt.id), 0) from WaitingTokenEntity wt where wt.waitingTokenStatus = 'ACTIVATE' order by wt.id desc limit 1")
-    Long findActivateTokenSortedByIdDesc();
+    Long findLastActivateWaitingId();
 
     Optional<WaitingTokenEntity> findByToken(String token);
 
@@ -29,5 +29,5 @@ public interface JpaWaitingTokenRepository extends JpaRepository<WaitingTokenEnt
      * @return DEACTIVATE 상태인 토큰 전체 조회
      */
     @Query("select wt from WaitingTokenEntity wt where wt.waitingTokenStatus = 'DEACTIVATE' order by wt.id asc limit 3")
-    List<WaitingTokenEntity> findByDeactivateTokens();
+    List<WaitingTokenEntity> findDeactivateTokens();
 }

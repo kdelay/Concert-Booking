@@ -5,7 +5,6 @@ import booking.api.concert.domain.*;
 import booking.api.concert.domain.enums.ConcertSeatStatus;
 import booking.api.concert.domain.enums.PaymentState;
 import booking.api.concert.domain.enums.ReservationStatus;
-import booking.api.waiting.application.WaitingTokenFacade;
 import booking.api.waiting.domain.User;
 import booking.api.waiting.domain.WaitingTokenRepository;
 import booking.api.waiting.domain.WaitingTokenStatus;
@@ -31,9 +30,6 @@ public class ConcertIntegrationTest {
 
     @Autowired
     ConcertFacade concertFacade;
-
-    @Autowired
-    WaitingTokenFacade waitingTokenFacade;
 
     @Autowired
     ConcertRepository concertRepository;
@@ -191,7 +187,7 @@ public class ConcertIntegrationTest {
             assertThat(seatStatus).isEqualTo(ConcertSeatStatus.AVAILABLE);
 
             //대기열 토큰 만료 검증
-            WaitingTokenStatus waitingTokenStatus = waitingTokenRepository.findUsingTokenByUserId(reservation.getUserId()).getWaitingTokenStatus();
+            WaitingTokenStatus waitingTokenStatus = waitingTokenRepository.findNotExpiredToken(reservation.getUserId()).getWaitingTokenStatus();
             assertThat(waitingTokenStatus).isEqualTo(WaitingTokenStatus.EXPIRED);
         }
     }

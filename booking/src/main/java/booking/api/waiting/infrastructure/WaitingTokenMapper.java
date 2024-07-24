@@ -27,6 +27,7 @@ public class WaitingTokenMapper {
     public static WaitingToken toDomain(WaitingTokenEntity entity) {
         return new WaitingToken(
                 entity.getId(),
+                entity.getVersion(),
                 UserMapper.toDomain(entity.getUserEntity()),
                 entity.getToken(),
                 entity.getWaitingTokenStatus(),
@@ -38,6 +39,7 @@ public class WaitingTokenMapper {
     public static WaitingTokenEntity toEntity(WaitingToken waitingToken) {
         return WaitingTokenEntity.builder()
                 .id(waitingToken.getId())
+                .version(waitingToken.getVersion())
                 .userEntity(userToEntity(waitingToken.getUser()))
                 .token(waitingToken.getToken())
                 .waitingTokenStatus(waitingToken.getWaitingTokenStatus())

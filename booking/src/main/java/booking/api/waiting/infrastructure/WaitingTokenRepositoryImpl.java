@@ -50,19 +50,19 @@ public class WaitingTokenRepositoryImpl implements WaitingTokenRepository {
     }
 
     @Override
-    public Long findActivateTokenSortedByIdDesc() {
-        return jpaWaitingTokenRepository.findActivateTokenSortedByIdDesc().describeConstable().orElse(null);
+    public Long findLastActivateWaitingId() {
+        return jpaWaitingTokenRepository.findLastActivateWaitingId().describeConstable().orElse(0L);
     }
 
     @Override
-    public WaitingToken findUsingTokenByUserId(Long userId) {
-        WaitingTokenEntity waitingTokenEntity = jpaWaitingTokenRepository.findUsingTokenByUserId(userId).orElse(null);
+    public WaitingToken findNotExpiredToken(Long userId) {
+        WaitingTokenEntity waitingTokenEntity = jpaWaitingTokenRepository.findNotExpiredToken(userId).orElse(null);
         if (waitingTokenEntity == null) return null;
         return WaitingTokenMapper.toDomain(waitingTokenEntity);
     }
 
     @Override
-    public List<WaitingToken> findByDeactivateTokens() {
+    public List<WaitingToken> findDeactivateTokens() {
         return WaitingTokenMapper.toDomainList(jpaWaitingTokenRepository.findAll());
     }
 }

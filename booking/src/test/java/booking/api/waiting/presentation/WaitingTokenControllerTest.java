@@ -1,8 +1,8 @@
 package booking.api.waiting.presentation;
 
-import booking.api.waiting.application.WaitingTokenFacade;
 import booking.api.waiting.domain.User;
 import booking.api.waiting.domain.WaitingToken;
+import booking.api.waiting.domain.WaitingTokenService;
 import booking.support.WebMvcConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
@@ -38,31 +38,29 @@ class WaitingTokenControllerTest {
     ObjectMapper objectMapper;
 
     @MockBean
-    WaitingTokenFacade waitingTokenFacade;
+    WaitingTokenService waitingTokenService;
 
     @Test
     @DisplayName("POST /waiting/token 발급 및 조회 API 테스트")
     void testIssueTokenOrSearchWaiting() throws Exception {
 
         long userId = 1L;
-        long concertId = 1L;
-
         String token = UUID.randomUUID().toString();
-        WaitingTokenRequest request = new WaitingTokenRequest(userId, concertId);
 
         User user = new User(userId, BigDecimal.ZERO);
-        WaitingToken waitingToken = new WaitingToken(1L, user, token, DEACTIVATE, LocalDateTime.now(), null);
-        given(waitingTokenFacade.issueTokenOrSearchWaiting(userId, concertId)).willReturn(waitingToken);
-        given(waitingTokenFacade.getRank(waitingToken.getId())).willReturn(0L);
+        WaitingToken waitingToken = new WaitingToken(1L, 0L, user, token, DEACTIVATE, LocalDateTime.now(), null);
 
-        String req = objectMapper.writeValueAsString(request);
+        given(waitingTokenService.issueToken(anyLong())).willReturn(waitingToken);
+        given(waitingTokenService.getRank(anyLong())).willReturn(0L);
+
+        WaitingTokenRequest waitingTokenRequest = new WaitingTokenRequest(userId);
+        String req = objectMapper.writeValueAsString(waitingTokenRequest);
 
         //when & then
         mockMvc.perform(post("/waiting/token")
                         .header("Authorization", token)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(req)
-                        .header("Authorization", "Bearer valid-token"))
+                        .content(req))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.accessToken").value(token))
                 .andExpect(jsonPath("$.status").value("DEACTIVATE"))
@@ -73,18 +71,24 @@ class WaitingTokenControllerTest {
     @DisplayName("POST /waiting/token - 헤더 토큰이 없어도 정상적으로 동작해야 한다(신규 토큰 발급)")
     public void emptyHeaderToken() throws Exception {
 
-        WaitingTokenRequest request = new WaitingTokenRequest(1L, 1L);
+        long userId = 1L;
+        String token = "valid-token";
 
+        User user = new User(userId, BigDecimal.ZERO);
+        WaitingToken waitingToken = new WaitingToken(1L, 0L, user, token, DEACTIVATE, LocalDateTime.now(), null);
+
+        given(waitingTokenService.issueToken(anyLong())).willReturn(waitingToken);
+        given(waitingTokenService.getRank(anyLong())).willReturn(0L);
+
+        WaitingTokenRequest request = new WaitingTokenRequest(userId);
         String req = objectMapper.writeValueAsString(request);
-
-        User user = new User(1L, BigDecimal.ZERO);
-        WaitingToken waitingToken = new WaitingToken(1L, user, "valid-token", DEACTIVATE, LocalDateTime.now(), null);
-        given(waitingTokenFacade.issueTokenOrSearchWaiting(anyLong(), anyLong())).willReturn(waitingToken);
-        given(waitingTokenFacade.getRank(anyLong())).willReturn(0L);
 
         mockMvc.perform(post("/waiting/token")
                         .contentType("application/json")
                         .content(req))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.accessToken").value(token))
+                .andExpect(jsonPath("$.status").value("DEACTIVATE"))
+                .andExpect(jsonPath("$.rank").value(1L));
     }
 }

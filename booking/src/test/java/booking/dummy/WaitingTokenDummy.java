@@ -20,7 +20,7 @@ public class WaitingTokenDummy {
 
         for (User user : userList) {
             waitingTokenList.add(
-                    new WaitingToken(pk++, user, UUID.randomUUID().toString(), DEACTIVATE, LocalDateTime.now(), null)
+                    new WaitingToken(pk++, 0L, user, UUID.randomUUID().toString(), DEACTIVATE, LocalDateTime.now(), null)
             );
         }
         return waitingTokenList;

@@ -1,7 +1,5 @@
 package booking.api.waiting.domain;
 
-import booking.api.concert.domain.Concert;
-import booking.api.concert.domain.ConcertRepository;
 import booking.dummy.UserDummy;
 import booking.dummy.WaitingTokenDummy;
 import booking.support.exception.CustomNotFoundException;
@@ -12,9 +10,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
-import java.time.ZoneId;
-import java.util.ArrayList;
+import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 
 import static booking.api.waiting.domain.WaitingTokenStatus.ACTIVATE;
@@ -24,7 +23,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
@@ -37,11 +35,7 @@ class WaitingTokenServiceTest {
     @Mock
     WaitingTokenRepository waitingTokenRepository;
 
-    @Mock
-    ConcertRepository concertRepository;
-
     private List<User> userList;
-    private Concert concert;
     private List<WaitingToken> waitingTokenList;
 
     @BeforeEach
@@ -52,15 +46,15 @@ class WaitingTokenServiceTest {
             lenient().when(waitingTokenRepository.findByUserId(user.getId())).thenReturn(user);
         }
 
-        //콘서트 기본 세팅
-        concert = Concert.create(1L, "A 콘서트", "A");
-        lenient().when(concertRepository.findByConcertId(1L)).thenReturn(concert);
-
         //대기열 토큰 기본 세팅
         waitingTokenList = WaitingTokenDummy.getWaitingTokenList();
         for (WaitingToken waitingToken : waitingTokenList) {
             lenient().when(waitingTokenRepository.save(waitingToken)).thenReturn(waitingToken);
         }
+
+        //value mocking
+        ReflectionTestUtils.setField(waitingTokenService, "entryAmount", 3);
+        ReflectionTestUtils.setField(waitingTokenService, "processTime", 60000);
     }
 
     //-----------------------------------------------------------------------------------
@@ -71,48 +65,43 @@ class WaitingTokenServiceTest {
 
         //given
         long userId = 1L;
-        long concertId = 1L;
 
         //유저 정보 조회
         when(waitingTokenRepository.findByUserId(userId))
                 .thenThrow(new CustomNotFoundException(USER_IS_NOT_FOUND, "해당하는 유저가 없습니다. [userId : %d]".formatted(userId)));
 
-        //콘서트 정보 조회
-        lenient().when(concertRepository.findByConcertId(concertId)).thenReturn(concert);
-
         //when & then
-        assertThatThrownBy(() -> waitingTokenService.issueTokenOrSearchWaiting(userId, concertId))
+        assertThatThrownBy(() -> waitingTokenService.issueToken(userId))
                 .isInstanceOf(CustomNotFoundException.class)
                 .hasMessage("[USER_IS_NOT_FOUND] 해당하는 유저가 없습니다. [userId : %d]".formatted(userId));
     }
 
     @Test
-    @DisplayName("헤더에 토큰이 없거나 대기열 토큰 정보가 없는 경우 신규 토큰 발급")
+    @DisplayName("비활성화 상태의 대기열 토큰 정보가 없는 경우")
+    void emptyWaitingToken() {
+
+        when(waitingTokenRepository.findDeactivateTokens()).thenReturn(List.of());
+
+        List<WaitingToken> list = waitingTokenService.getDeactivateTokens();
+        assertThat(list.size()).isEqualTo(0);
+    }
+
+    @Test
+    @DisplayName("대기열 토큰 정보가 없는 경우 신규 토큰 발급")
     void emptyHeaderThenIssueToken() {
 
-        //given
-        String token = null;
-        long userId = 1L;
-        long concertId = 1L;
+        //유저 정보
+        User user = userList.get(0);
+        Long userId = user.getId();
 
-        //만료되지 않은 대기열 토큰 정보 조회
-        when(waitingTokenRepository.findUsingTokenByUserId(userId)).thenReturn(null);
+        //만료되지 않은 대기열 토큰 정보가 없는 경우
+        when(waitingTokenRepository.findNotExpiredToken(userId)).thenReturn(null);
 
-        //콘서트 정보 조회
-        lenient().when(concertRepository.findByConcertId(concertId)).thenReturn(concert);
+        //신규 토큰 발급
+        WaitingToken waitingToken = waitingTokenList.get(0);
+        when(waitingTokenRepository.save(any(WaitingToken.class))).thenReturn(waitingToken);
 
-        //대기열 순서 번호
-        when(waitingTokenRepository.findActivateTokenSortedByIdDesc()).thenReturn(123L);
-
-        //대기열 토큰 저장
-        when(waitingTokenRepository.save(any(WaitingToken.class))).thenAnswer(invocation -> {
-            WaitingToken savedToken = invocation.getArgument(0);
-            return new WaitingToken(1L, savedToken.getUser(), savedToken.getToken(),
-                    savedToken.getWaitingTokenStatus(), savedToken.getCreatedAt(), savedToken.getModifiedAt());
-        });
-
-        //when
-        WaitingToken result = waitingTokenService.issueTokenOrSearchWaiting(userId, concertId);
+        WaitingToken result = waitingTokenService.issueToken(userId);
 
         //토큰이 있는지 검증
         assertNotNull(result);
@@ -120,79 +109,63 @@ class WaitingTokenServiceTest {
     }
 
     @Test
-    @DisplayName("헤더에 토큰이 있고 대기열 토큰 정보가 있는 경우 유저의 현재 대기열 반환")
-    void havingTokenInHeaderThenReturnWaiting() {
+    @DisplayName("대기열 토큰 정보가 있는 경우 유저의 현재 대기열 반환")
+    void havingTokenInHeaderReturnWaiting() {
 
-        //given
-        long userId = 1L;
-        long waitingTokenId = 1L;
-        long concertId = 1L;
+        //유저 정보
+        User user = userList.get(0);
+        Long userId = user.getId();
 
-        //유저 정보 조회
-        User user = userList.stream().filter(u -> u.getId().equals(userId)).findFirst()
-                .orElseThrow(() -> new CustomNotFoundException(USER_IS_NOT_FOUND, "해당하는 유저가 없습니다. [userId : %d]".formatted(userId)));
-        when(waitingTokenRepository.findByUserId(userId)).thenReturn(user);
+        //만료되지 않은 대기열 토큰 정보가 있는 경우
+        WaitingToken waitingToken = waitingTokenList.get(0);
+        when(waitingTokenRepository.findNotExpiredToken(userId)).thenReturn(waitingToken);
 
-        //콘서트 정보 조회
-        lenient().when(concertRepository.findByConcertId(concertId)).thenReturn(concert);
+        WaitingToken result = waitingTokenService.issueToken(userId);
 
-        //대기열 토큰 조회
-        WaitingToken waitingToken = waitingTokenList.stream().filter(w -> w.getId().equals(waitingTokenId)).findFirst().orElse(null);
-        when(waitingTokenRepository.findUsingTokenByUserId(waitingTokenId)).thenReturn(waitingToken);
-
-        //토큰 정보
-        assert waitingToken != null;
-        String token = waitingToken.getToken();
-
-        //when
-        WaitingToken result = waitingTokenService.issueTokenOrSearchWaiting(user.getId(), anyLong());
-
-        //토큰 정보와 id 가 동일한지 검증
-        assertThat(result.getId()).isEqualTo(waitingTokenId);
-        assertThat(result.getToken()).isEqualTo(token);
+        //유저가 가지고 있는 대기열 토큰인지 검증
+        assertThat(result.getUser().getId()).isEqualTo(userId);
     }
 
     @Test
     @DisplayName("대기열 진입 여부에 따른 토큰 상태 테스트")
     void tokenStateTest() {
 
-        //대기열 토큰 조회 + 대기열 진입 여부 확인
-        for (WaitingToken waitingToken : waitingTokenList) checkEntryAndUpdateState(waitingToken);
+        List<WaitingToken> waitingTokens = userList.stream()
+                .map(user -> new WaitingToken(
+                        user.getId(), 0L, user, "valid-token", DEACTIVATE,
+                        LocalDateTime.now().minusMinutes(user.getId()), null))
+                .toList();
+
+        //순서
+        Long lastActivateId = waitingTokens.stream()
+                .filter(waitingToken -> ACTIVATE.equals(waitingToken.getWaitingTokenStatus()))
+                .map(WaitingToken::getId)
+                .max(Comparator.naturalOrder())
+                .orElse(0L);
+        when(waitingTokenRepository.findLastActivateWaitingId()).thenReturn(lastActivateId);
+
+        //대기열 입장 시간 확인
+        waitingTokens.forEach(waitingTokenService::activateTokens);
 
         //대기 중인 waitingToken 의 정보를 검증
-        List<WaitingToken> deactivatedTokens = new ArrayList<>();
-        for (WaitingToken waitingToken : waitingTokenList) {
-            if (waitingToken.getWaitingTokenStatus() == DEACTIVATE) {
-                deactivatedTokens.add(waitingToken);
-            }
-        }
+        List<WaitingToken> deactivateTokens = waitingTokens.stream()
+                .filter(waitingToken -> waitingToken.getWaitingTokenStatus() == DEACTIVATE)
+                .toList();
 
-        //대기 중인 waitingToken 이 7개인지 확인
-        assertThat(deactivatedTokens.size()).isEqualTo(7);
+        //대기 중인 waitingToken 이 8개인지 확인
+        assertThat(deactivateTokens.size()).isEqualTo(8);
 
         //각 대기 중인 waitingToken 의 정보를 검증 (예: ID가 3 이상인지 확인)
-        for (WaitingToken deactivatedToken : deactivatedTokens) {
-            assertThat(deactivatedToken.getId()).isGreaterThanOrEqualTo(3L);
-        }
+        assertThat(deactivateTokens.stream().allMatch(deactivateToken -> deactivateToken.getId() >= 3L)).isTrue();
     }
 
-    private void checkEntryAndUpdateState(WaitingToken waitingToken) {
+    @Test
+    @DisplayName("현재 대기열 순서 번호 테스트")
+    void getRankTest() {
 
-        //대기열 순서 번호
-        when(waitingTokenRepository.findActivateTokenSortedByIdDesc()).thenReturn(1L);
-        long rank = waitingTokenService.getRank(waitingToken.getId());
+        when(waitingTokenRepository.findLastActivateWaitingId()).thenReturn(0L);
 
-        //토큰 생성 시간(ms)
-        long tokenCreatedAt = waitingToken.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
-
-        //5초당 3명씩 대기열에 들어갈 수 있다고 가정한다.
-        long entryAmount = 3L;
-        long processTime = 5000L;
-
-        //대기열 입장 가능 시간 = 토큰 생성 시간 + ((대기열 순서 번호 / 분당 처리량) * 대기열 처리 시간)
-        long entryAccessTime = tokenCreatedAt + ((rank / entryAmount) * processTime);
-
-        //대기열 입장 가능 시간이 된 경우 토큰 상태를 ACTIVATE 로 업데이트한다.
-        if(tokenCreatedAt == entryAccessTime) waitingToken.updateWaitingTokenStatus(ACTIVATE);
+        long rank = waitingTokenService.getRank(1L);
+        assertThat(rank).isEqualTo(1L);
     }
 }
