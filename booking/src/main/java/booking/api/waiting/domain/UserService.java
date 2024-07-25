@@ -23,7 +23,7 @@ public class UserService {
 
         if(amount.equals(BigDecimal.ZERO)) throw new IllegalArgumentException("충전 금액이 0원입니다.");
         //유저 조회
-        User user = waitingTokenRepository.findByUserId(userId);
+        User user = waitingTokenRepository.findLockByUserId(userId);
         user.chargeAmount(amount);
         return waitingTokenRepository.saveUser(user);
     }
