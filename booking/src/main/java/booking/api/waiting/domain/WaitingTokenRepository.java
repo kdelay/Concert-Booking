@@ -1,7 +1,5 @@
 package booking.api.waiting.domain;
 
-import jakarta.persistence.LockModeType;
-import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
@@ -11,7 +9,6 @@ public interface WaitingTokenRepository {
     //user
     User findByUserId(Long userId);
 
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
     User findLockByUserId(Long userId);
 
     User saveUser(User user);

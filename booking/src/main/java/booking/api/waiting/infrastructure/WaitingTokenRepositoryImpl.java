@@ -31,7 +31,7 @@ public class WaitingTokenRepositoryImpl implements WaitingTokenRepository {
     @Override
     public User findLockByUserId(Long userId) {
         return userToDomain(
-                jpaUserRepository.findById(userId)
+                jpaUserRepository.findLockById(userId)
                         .orElseThrow(() -> new CustomNotFoundException(USER_IS_NOT_FOUND,
                                 "해당하는 유저가 없습니다. [userId : %d]".formatted(userId)))
         );

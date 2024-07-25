@@ -5,14 +5,18 @@ import booking.api.concert.domain.enums.ConcertSeatStatus;
 import booking.api.concert.domain.enums.PaymentState;
 import booking.api.concert.domain.enums.ReservationStatus;
 import booking.api.waiting.domain.User;
+import booking.api.waiting.domain.UserService;
 import booking.api.waiting.domain.WaitingTokenRepository;
 import booking.api.waiting.domain.WaitingTokenStatus;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedDeque;
@@ -26,6 +30,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @ActiveProfiles("test")
+@Slf4j
 public class ConcertIntegrationTest {
 
     @Autowired
@@ -36,6 +41,9 @@ public class ConcertIntegrationTest {
 
     @Autowired
     private ConcertRepository concertRepository;
+
+    @Autowired
+    private UserService userService;
 
     @Test
     @DisplayName("50명이 동시에 동일한 좌석을 예약 신청하는 경우, 한 명만 예약 가능")
@@ -66,6 +74,9 @@ public class ConcertIntegrationTest {
 
         for (int i = 0; i < threads; i++) {
             executorService.execute(() -> {
+                log.info("Thread Name: {}", Thread.currentThread().getName());
+                long start_time = System.currentTimeMillis();
+
                 try {
                     concertService.bookingSeats(userIdList.poll(),
                             concertScheduleList.get(0).getId(),
@@ -74,8 +85,10 @@ public class ConcertIntegrationTest {
                     successCount.getAndIncrement();
                 } catch (RuntimeException e) {
                     failCount.getAndIncrement();
+                    log.error("Exception occurred: ", e);
                 } finally {
                     countDownLatch.countDown();
+                    log.info("# 소요 시간 = {} (ms)", System.currentTimeMillis() - start_time);
                 }
             });
         }
@@ -190,5 +203,45 @@ public class ConcertIntegrationTest {
             assertThat(waitingTokenRepository.findWaitingByUserId(reservation.getUserId()).getWaitingTokenStatus())
                     .isEqualTo(WaitingTokenStatus.EXPIRED);
         });
+    }
+
+    @Test
+    @DisplayName("동시에 동일 유저의 잔액을 사용하려고 시도 하더라도, 한 번만 사용 가능하다.")
+    void payIntegrationTest() throws InterruptedException {
+
+        int threads = 3;
+        long userId = 1L;
+
+        CountDownLatch countDownLatch = new CountDownLatch(threads);
+        ExecutorService executorService = Executors.newFixedThreadPool(threads);
+
+        AtomicInteger successCount = new AtomicInteger();
+        AtomicInteger failCount = new AtomicInteger();
+
+        userService.charge(userId, BigDecimal.valueOf(5000));
+        concertService.bookingSeats(userId, 1L, LocalDate.parse("2024-07-10"), List.of(1, 2));
+
+        for (int i = 0; i < threads; i++) {
+            executorService.execute(() -> {
+                try {
+                    concertService.pay(1L, 1L);
+                    successCount.getAndIncrement();
+                } catch (RuntimeException e) {
+                    failCount.getAndIncrement();
+                    log.error("Exception occurred: ", e);
+                } finally {
+                    countDownLatch.countDown();
+                }
+            });
+        }
+
+        countDownLatch.await();
+        executorService.shutdown();
+
+        User user = waitingTokenRepository.findByUserId(userId);
+
+        assertThat(user.getAmount()).isEqualTo(BigDecimal.valueOf(4000));
+        assertThat(successCount.get()).isEqualTo(1);
+        assertThat(failCount.get()).isEqualTo(2);
     }
 }
