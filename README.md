@@ -279,105 +279,238 @@ sequenceDiagram
 
 # Tree
 ```text
-└── src
-    ├── main
-    │   ├── java
-    │   │   └── booking
-    │   │       ├── BookingApplication.java
-    │   │       ├── api
-    │   │       │   ├── concert
-    │   │       │   │   ├── Payment.java
-    │   │       │   │   ├── domain
-    │   │       │   │   │   ├── Concert.java
-    │   │       │   │   │   ├── ConcertRepository.java
-    │   │       │   │   │   ├── ConcertSchedule.java
-    │   │       │   │   │   ├── ConcertSeat.java
-    │   │       │   │   │   ├── ConcertService.java
-    │   │       │   │   │   ├── Reservation.java
-    │   │       │   │   │   └── enums
-    │   │       │   │   │       ├── ConcertSeatStatus.java
-    │   │       │   │   │       ├── PaymentState.java
-    │   │       │   │   │       └── ReservationStatus.java
-    │   │       │   │   ├── infrastructure
-    │   │       │   │   │   ├── ConcertEntity.java
-    │   │       │   │   │   ├── ConcertMapper.java
-    │   │       │   │   │   ├── ConcertRepositoryImpl.java
-    │   │       │   │   │   ├── ConcertScheduleEntity.java
-    │   │       │   │   │   ├── ConcertSeatEntity.java
-    │   │       │   │   │   ├── JpaConcertRepository.java
-    │   │       │   │   │   ├── JpaConcertScheduleRepository.java
-    │   │       │   │   │   ├── JpaConcertSeatRepository.java
-    │   │       │   │   │   ├── JpaPaymentRepository.java
-    │   │       │   │   │   ├── JpaReservationRepository.java
-    │   │       │   │   │   ├── PaymentEntity.java
-    │   │       │   │   │   └── ReservationEntity.java
-    │   │       │   │   └── presentation
-    │   │       │   │       ├── ConcertController.java
-    │   │       │   │       ├── PaymentController.java
-    │   │       │   │       ├── request
-    │   │       │   │       │   ├── BookingSeatsRequest.java
-    │   │       │   │       │   └── PayRequest.java
-    │   │       │   │       └── response
-    │   │       │   │           ├── BookingSeatsResponse.java
-    │   │       │   │           ├── PayResponse.java
-    │   │       │   │           ├── SearchPaymentResponse.java
-    │   │       │   │           ├── SearchScheduleResponse.java
-    │   │       │   │           └── SearchSeatsResponse.java
-    │   │       │   └── waiting
-    │   │       │       ├── domain
-    │   │       │       │   ├── User.java
-    │   │       │       │   ├── UserService.java
-    │   │       │       │   ├── WaitingToken.java
-    │   │       │       │   ├── WaitingTokenRepository.java
-    │   │       │       │   ├── WaitingTokenService.java
-    │   │       │       │   └── WaitingTokenStatus.java
-    │   │       │       ├── infrastructure
-    │   │       │       │   ├── JpaUserRepository.java
-    │   │       │       │   ├── JpaWaitingTokenRepository.java
-    │   │       │       │   ├── UserEntity.java
-    │   │       │       │   ├── UserMapper.java
-    │   │       │       │   ├── WaitingTokenEntity.java
-    │   │       │       │   ├── WaitingTokenMapper.java
-    │   │       │       │   └── WaitingTokenRepositoryImpl.java
-    │   │       │       └── presentation
-    │   │       │           ├── ChargeRequest.java
-    │   │       │           ├── ChargeResponse.java
-    │   │       │           ├── SearchAmountResponse.java
-    │   │       │           ├── UserController.java
-    │   │       │           ├── WaitingTokenController.java
-    │   │       │           ├── WaitingTokenRequest.java
-    │   │       │           └── WaitingTokenResponse.java
-    │   │       └── common
-    │   │           ├── exception
-    │   │           │   ├── AuthorizationException.java
-    │   │           │   ├── BaseException.java
-    │   │           │   └── Exception.java
-    │   │           └── handler
-    │   │               ├── ApiControllerAdvice.java
-    │   │               └── ErrorResponse.java
-    │   └── resources
-    │       ├── application.properties
-    │       ├── application.yml
-    │       ├── static
-    │       └── templates
-    └── test
-        └── java
-            └── booking
-                ├── BookingApplicationTests.java
-                └── api
-                    ├── concert
-                    │   ├── domain
-                    │   │   ├── ConcertSeatDummy.java
-                    │   │   └── ConcertServiceTest.java
-                    │   └── presentation
-                    │       └── ConcertControllerTest.java
-                    └── waiting
-                        ├── domain
-                        │   ├── UserDummy.java
-                        │   ├── UserServiceTest.java
-                        │   ├── WaitingTokenDummy.java
-                        │   └── WaitingTokenServiceTest.java
-                        └── presentation
-                            ├── UserControllerTest.java
-                            └── WaitingTokenControllerTest.java
+├── api
+│   ├── concert
+│   │   ├── domain
+│   │   │   ├── Concert.java
+│   │   │   ├── ConcertRepository.java
+│   │   │   ├── ConcertSchedule.java
+│   │   │   ├── ConcertSeat.java
+│   │   │   ├── ConcertService.java
+│   │   │   ├── Payment.java
+│   │   │   ├── Reservation.java
+│   │   │   └── enums
+│   │   │       ├── ConcertSeatStatus.java
+│   │   │       ├── PaymentState.java
+│   │   │       └── ReservationStatus.java
+│   │   ├── infrastructure
+│   │   │   ├── ConcertEntity.java
+│   │   │   ├── ConcertMapper.java
+│   │   │   ├── ConcertRepositoryImpl.java
+│   │   │   ├── ConcertScheduleEntity.java
+│   │   │   ├── ConcertSeatEntity.java
+│   │   │   ├── JpaConcertRepository.java
+│   │   │   ├── JpaConcertScheduleRepository.java
+│   │   │   ├── JpaConcertSeatRepository.java
+│   │   │   ├── JpaPaymentRepository.java
+│   │   │   ├── JpaReservationRepository.java
+│   │   │   ├── PaymentEntity.java
+│   │   │   └── ReservationEntity.java
+│   │   └── presentation
+│   │       ├── ConcertController.java
+│   │       ├── request
+│   │       │   ├── BookingSeatsRequest.java
+│   │       │   └── PayRequest.java
+│   │       └── response
+│   │           ├── BookingSeatsResponse.java
+│   │           ├── PayResponse.java
+│   │           ├── SearchPaymentResponse.java
+│   │           ├── SearchScheduleResponse.java
+│   │           └── SearchSeatsResponse.java
+│   └── waiting
+│       ├── domain
+│       │   ├── User.java
+│       │   ├── UserService.java
+│       │   ├── WaitingToken.java
+│       │   ├── WaitingTokenRepository.java
+│       │   ├── WaitingTokenService.java
+│       │   └── WaitingTokenStatus.java
+│       ├── infrastructure
+│       │   ├── JpaUserRepository.java
+│       │   ├── JpaWaitingTokenRepository.java
+│       │   ├── UserEntity.java
+│       │   ├── UserMapper.java
+│       │   ├── WaitingTokenEntity.java
+│       │   ├── WaitingTokenMapper.java
+│       │   └── WaitingTokenRepositoryImpl.java
+│       └── presentation
+│           ├── ChargeRequest.java
+│           ├── ChargeResponse.java
+│           ├── SearchAmountResponse.java
+│           ├── UserController.java
+│           ├── WaitingTokenController.java
+│           ├── WaitingTokenRequest.java
+│           └── WaitingTokenResponse.java
+└── support
+    ├── Authorization.java
+    ├── FilterConfig.java
+    ├── LoggingFilter.java
+    ├── TokenInterceptor.java
+    ├── WebMvcConfig.java
+    ├── exception
+    │   ├── BaseException.java
+    │   ├── CustomBadRequestException.java
+    │   ├── CustomNotFoundException.java
+    │   ├── ErrorCode.java
+    │   └── Exception.java
+    ├── handler
+    │   ├── ApiControllerAdvice.java
+    │   ├── ApiResultResponse.java
+    │   └── ErrorResponse.java
+    └── scheduler
+        ├── ConcertSeatScheduler.java
+        └── WaitingTokenScheduler.java
+
 ```
+
+# 비즈니스 로직 중 발생 가능한 동시성 이슈 파악
+- 토큰 활성화(ACTIVATE)
+- 콘서트 좌석 점유 및 예약
+- 결제(유저 잔액 사용)
+- 유저 잔액 충전
+
+# 동시성 제어 방식 도입
+- `성능`: 속도
+- `사용성 측면` -> 개발 측면
+	- 불편한 부분
+	- 중앙화에서 관리 가능 여부
+	- 재사용성 있는 코드
+- `데이터의 정합성`
+	- 락 구현 이유: lock 보장함으로써 data 정합성 보장
+- `데드락` 발생 방지 필요(비관적 락)
+- `예외 사항`에 따른 처리 편의성
+
+---
+
+## 토큰 활성화(ACTIVATE)
+### 기존 비즈니스 기반 로직에서 필요한 lock 체크
+- 유저 정보 조회 [x] 
+- 콘서트 정보 조회 [x]
+- 만료되지 않은 대기열 토큰 정보 조회 [x]
+- 대기열 토큰 정보가 없는 경우 새로운 토큰 발급 [x] - unique key
+- 대기열 토큰 정보가 있는 경우 입장 가능 시간 확인하고 토큰 상태 변경해서 정보 반환 [o] - version
+
+### 고려사항
+- 새로운 토큰 발급 실패할 케이스 없음
+- 사용자가 토큰이 있는 상태에서 동시에 상태 변경하려고 접근할 수 있음 
+	- 다만 충돌 적으므로 `낙관적 락` 고려
+
+### 시스템 입장 로직 transaction 묶기
+```
+Tx {
+	- 토큰이 있는 경우, 입장 가능 시 토큰 상태 ACTIVATE 로 변경
+}
+```
+
+
+## 콘서트 좌석 점유 및 예약
+### 기존 비즈니스 기반 로직에서 필요한 lock 체크
+- 콘서트 모든 목록 조회 [x]
+- 콘서트 정보 조회 [x]
+- 콘서트 날짜 정보 조회 [x]
+- 날짜와 일치하는 콘서트 날짜 정보 조회 [x]
+- 날짜와 일치하는 예약 가능한 콘서트 좌석 조회 [x]
+- 예약 시, 예약하고자 하는 좌석 리스트 조회 [o] - version -> redis
+	- n번째 좌석 동시 요청 후 좌석 상태 값 변경
+		- A:0 -> X
+		- B:0 -> 1
+		- C:0 -> X
+- 좌석 임시 배정 상태로 변경 [x]
+- 컬럼 유저 PK 및 modifiedAt 업데이트 [x]
+
+### 고려사항
+- 예약 가능한 좌석 리스트 조회
+- 좌석이 임시 배정 상태로 변경
+- 좌석의 user_id 컬럼에 점유한 유저의 PK 를 업데이트
+- 예약과 결제 데이터가 모두 추가되어야 한다.
+- 다른 유저는 예약 불가 상태
+- n분 동안 결제를 완료해야 한다.
+- `낙관적 락`으로 버전 관리를 하면서 다른 사용자가 좌석을 점유할 수 없도록 한다.
+
+### 시스템 입장 로직 transaction 묶기
+```
+Tx {
+	- 예약하고자 하는 좌석 리스트 조회
+	- 좌석 상태 변경(TEMPORARY)
+	- 컬럼 유저 PK 및 modifiedAt 업데이트
+	- 예약 정보 insert(RESERVING)
+	- 결제 정보 insert(PENDING)
+}
+```
+
+
+## 토큰 만료
+### 기존 비즈니스 기반 로직에서 필요한 lock 체크
+- 예약 진행 중인 상태의 예약 데이터 조회 [x]
+- 시간 내 결제 미완료 [x]
+- 상태 변경 [x]
+
+### 고려사항
+- scheduler 를 통해 시간 내 결제가 완료되지 않을 경우 진행된다.
+- transaction 으로 묶어서 한 단위 안에 실행될 수 있도록 한다.
+
+### 시스템 입장 로직 transaction 묶기
+```
+Tx {
+	- 좌석 상태 변경(AVAILABLE)
+	- 예약 상태 변경(CANCELED)
+	- 결제 상태 변경(CANCELED)
+	- 토큰 상태 변경(EXPIRED)
+}
+```
+
+
+## 결제(유저 잔액 사용)
+### 기존 비즈니스 기반 로직에서 필요한 lock 체크
+- 예약 정보 조회 [x]
+- 유저 잔액 조회 [x]
+- 유저 잔액에서 결제 금액 차감 [o] - lock
+  
+### 고려사항
+- 잔액 차감은 `비관적 락`으로 설정한다.
+	- 유저가 잔액을 차감할 동안 다른 행동을 할 가능성이 적다.
+- transaction 으로 묶어서 한 단위 안에 실행될 수 있도록 한다.
+
+### 시스템 입장 로직 transaction 묶기
+```
+Tx {
+	- 유저 잔액에서 결제 금액 차감
+	- 결제 상태 변경(COMPLETED)
+	- 예약 상태 변경(RESERVED)
+	- 좌석 상태 변경(RESERVED)
+}
+```
+
+
+## 유저 잔액 충전
+### 기존 비즈니스 기반 로직에서 필요한 lock 체크
+- 유저 조회 [x]
+- 잔액 충전 [o] - lock
+
+### 고려사항
+- 잔액 충전 시 따닥 이슈를 고려하여 `비관적 락` 설정
+
+### 시스템 입장 로직 transaction 묶기
+```
+Tx {
+	- 유저 조회
+	- 잔액 충전
+}
+```
+
+---
+
+## 낙관적 락
+#### 구현의 복잡도 및 효율성
+Entity 에 @Version 어노테이션이 있는 version 필드를 만든 후, DB 에 version 컬럼을 추가해야 한다.
+Entity 와 Domain 을 분리했으므로 Domain 에도 version 필드가 존재한다.
+리팩토링 하면서 새로 낙관적 락을 도입할 때 version 을 모두 만들어야 해서 번거로운 단점이 있다.
+
+---
+## 비관적 락
+### 구현의 복잡도 및 효율성
+Lock 이 필요한 쿼리에 @Lock 어노테이션을 붙여서 비관적 락을 설정한다.
+낙관적 락보다는 구현이 쉬운 편이다.
+LockModeType 를 통해 읽기와 쓰기 둘다 불가능한 배타락과, 쓰기만 불가능한 공유락을 구분해서 설정할 수 있다.
+### 성능
+DB 에 접근한 사용자가 트랜잭션이 끝날 때까지 Lock 을 점유하고 있기 때문에 뒤에 대기자는 Lock 을 점유하고 있는 사용자가 작업을 마칠 때까지 무한정 기다리는 성능적 이슈가 발생할 수 있다.
