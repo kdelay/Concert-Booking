@@ -21,10 +21,9 @@ public class PaymentEntity {
     @Comment("콘서트 결제 PK")
     private Long id;
 
-    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JoinColumn(name = "reservation_id", referencedColumnName = "id", unique = true)
+    @Column(nullable = false)
     @Comment("콘서트 예약 PK")
-    private ReservationEntity reservationEntity;
+    private Long reservationId;
 
     @Column(precision = 7, scale = 0) //1,000,000 단위
     @Comment("결제 금액")
@@ -43,14 +42,14 @@ public class PaymentEntity {
     @Builder
     public PaymentEntity(
         Long id,
-        ReservationEntity reservationEntity,
+        Long reservationId,
         BigDecimal price,
         PaymentState paymentState,
         LocalDateTime createdAt,
         LocalDateTime modifiedAt
     ) {
         this.id = id;
-        this.reservationEntity = reservationEntity;
+        this.reservationId = reservationId;
         this.price = price;
         this.paymentState = paymentState;
         this.createdAt = createdAt;

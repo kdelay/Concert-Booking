@@ -1,6 +1,5 @@
 package booking.api.concert.integration;
 
-import booking.api.concert.application.ConcertFacade;
 import booking.api.concert.domain.*;
 import booking.api.concert.domain.enums.ConcertSeatStatus;
 import booking.api.concert.domain.enums.PaymentState;
@@ -21,6 +20,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -29,13 +29,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class ConcertIntegrationTest {
 
     @Autowired
-    ConcertFacade concertFacade;
+    private ConcertService concertService;
 
     @Autowired
-    ConcertRepository concertRepository;
+    private WaitingTokenRepository waitingTokenRepository;
 
     @Autowired
-    WaitingTokenRepository waitingTokenRepository;
+    private ConcertRepository concertRepository;
 
     @Test
     @DisplayName("50명이 동시에 동일한 좌석을 예약 신청하는 경우, 한 명만 예약 가능")
@@ -45,15 +45,14 @@ public class ConcertIntegrationTest {
         int threads = 50;
 
         //유저 정보
-        Queue<Long> userIdList = new ConcurrentLinkedDeque<>();
         List<User> users = waitingTokenRepository.findUsers();
-        for (User user : users) {
-            userIdList.add(user.getId());
-        }
+        Queue<Long> userIdList = users.stream()
+                .map(User::getId)
+                .collect(Collectors.toCollection(ConcurrentLinkedDeque::new));
 
         //콘서트 날짜 정보
         Concert concert = concertRepository.findByConcertId(1L);
-        List<ConcertSchedule> concertScheduleList = concertRepository.findByConcertEntity(concert);
+        List<ConcertSchedule> concertScheduleList = concertRepository.findSchedulesByConcert(concert);
 
         //50개로 초기화한다. 카운트가 0이 되면 스레드를 대기상태에서 해제한다.
         CountDownLatch countDownLatch = new CountDownLatch(threads);
@@ -68,7 +67,7 @@ public class ConcertIntegrationTest {
         for (int i = 0; i < threads; i++) {
             executorService.execute(() -> {
                 try {
-                    concertFacade.bookingSeats(userIdList.poll(),
+                    concertService.bookingSeats(userIdList.poll(),
                             concertScheduleList.get(0).getId(),
                             concertScheduleList.get(0).getConcertDate(),
                             List.of(1));
@@ -101,22 +100,20 @@ public class ConcertIntegrationTest {
         int threads = 10;
 
         //유저 정보
-        Queue<Long> userIdList = new ConcurrentLinkedDeque<>();
         List<User> users = waitingTokenRepository.findUsers();
-        for (User user : users) {
-            userIdList.add(user.getId());
-        }
+        Queue<Long> userIdList = users.stream()
+                .map(User::getId)
+                .collect(Collectors.toCollection(ConcurrentLinkedDeque::new));
 
         //콘서트 날짜 정보
         Concert concert = concertRepository.findByConcertId(1L);
-        List<ConcertSchedule> concertScheduleList = concertRepository.findByConcertEntity(concert);
+        List<ConcertSchedule> concertScheduleList = concertRepository.findSchedulesByConcert(concert);
 
         //좌석 정보
-        Queue<Integer> seatList = new ConcurrentLinkedDeque<>();
-        List<ConcertSeat> seats = concertRepository.findByConcertAndSchedule(concert, concertScheduleList.get(0));
-        for (ConcertSeat seat : seats) {
-            seatList.add(seat.getSeatNumber());
-        }
+        List<ConcertSeat> seats = concertRepository.findSeats(concert, concertScheduleList.get(0));
+        Queue<Integer> seatList = seats.stream()
+                .map(ConcertSeat::getSeatNumber)
+                .collect(Collectors.toCollection(ConcurrentLinkedDeque::new));
 
         //10개로 초기화한다. 카운트가 0이 되면 스레드를 대기상태에서 해제한다.
         CountDownLatch countDownLatch = new CountDownLatch(threads);
@@ -131,7 +128,7 @@ public class ConcertIntegrationTest {
         for (int i = 0; i < threads; i++) {
             executorService.execute(() -> {
                 try {
-                    concertFacade.bookingSeats(userIdList.poll(),
+                    concertService.bookingSeats(userIdList.poll(),
                             concertScheduleList.get(0).getId(),
                             concertScheduleList.get(0).getConcertDate(),
                             List.of(seatList.poll()));
@@ -162,33 +159,36 @@ public class ConcertIntegrationTest {
 
         User user = waitingTokenRepository.findByUserId(1L);
         Concert concert = concertRepository.findByConcertId(1L);
-        ConcertSchedule concertSchedule = concertRepository.findByConcertEntity(concert).get(0);
+        ConcertSchedule concertSchedule = concertRepository.findSchedulesByConcert(concert).get(0);
 
-        //좌석 예약 요청
-        List<Reservation> reservations = concertFacade.bookingSeats(user.getId(), concertSchedule.getId(), concertSchedule.getConcertDate(), List.of(1));
+        List<Reservation> reservations = concertService.bookingSeats(user.getId(), concertSchedule.getId(), concertSchedule.getConcertDate(), List.of(1));
+
+        //2분 전 데이터로 세팅
+        reservations.forEach(reservation -> {
+            reservation.twoMinutesAgo();
+            concertRepository.saveReservation(reservation);
+        });
 
         //1분 이내에 결제가 완료되지 않은 경우
-        concertFacade.checkExpiredTimeForSeat();
+        concertService.expiredToken();
 
-        //1분 대기
-        Thread.sleep(60000);
+        reservations.forEach(reservation -> {
 
-        for (Reservation reservation : reservations) {
-            //예약 취소 검증
-            ReservationStatus reservationStatus = concertRepository.findByReservationId(reservation.getId()).getReservationStatus();
-            assertThat(reservationStatus).isEqualTo(ReservationStatus.CANCELED);
+            //예약 상태 검증
+            assertThat(concertRepository.findByReservationId(reservation.getId()).getReservationStatus())
+                    .isEqualTo(ReservationStatus.CANCELED);
 
-            //결제 취소 검증
-            PaymentState paymentState = concertRepository.findPaymentByReservation(reservation).getPaymentState();
-            assertThat(paymentState).isEqualTo(PaymentState.CANCELED);
+            //결제 상태 검증
+            assertThat(concertRepository.findPaymentByReservation(reservation.getId()).getPaymentState())
+                    .isEqualTo(PaymentState.CANCELED);
 
-            //좌석 예약 가능 상태 검증
-            ConcertSeatStatus seatStatus = concertRepository.findBySeatId(reservation.getConcertSeatId()).getSeatStatus();
-            assertThat(seatStatus).isEqualTo(ConcertSeatStatus.AVAILABLE);
+            //좌석 상태 검증
+            assertThat(concertRepository.findBySeatId(reservation.getConcertSeatId()).getSeatStatus())
+                    .isEqualTo(ConcertSeatStatus.AVAILABLE);
 
-            //대기열 토큰 만료 검증
-            WaitingTokenStatus waitingTokenStatus = waitingTokenRepository.findNotExpiredToken(reservation.getUserId()).getWaitingTokenStatus();
-            assertThat(waitingTokenStatus).isEqualTo(WaitingTokenStatus.EXPIRED);
-        }
+            //대기열 상태 검증
+            assertThat(waitingTokenRepository.findWaitingByUserId(reservation.getUserId()).getWaitingTokenStatus())
+                    .isEqualTo(WaitingTokenStatus.EXPIRED);
+        });
     }
 }

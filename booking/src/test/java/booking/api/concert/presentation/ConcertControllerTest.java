@@ -1,10 +1,9 @@
 package booking.api.concert.presentation;
 
-import booking.api.concert.application.ConcertFacade;
-import booking.api.concert.domain.Concert;
-import booking.api.concert.domain.ConcertSchedule;
-import booking.api.concert.domain.Reservation;
+import booking.api.concert.domain.*;
+import booking.api.concert.domain.enums.ConcertSeatStatus;
 import booking.api.concert.presentation.request.BookingSeatsRequest;
+import booking.api.concert.presentation.request.PayRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -38,17 +37,17 @@ class ConcertControllerTest {
     ObjectMapper objectMapper;
 
     @MockBean
-    ConcertFacade concertFacade;
+    ConcertService concertService;
 
     @Test
     @DisplayName("GET /concert/list 콘서트 목록 조회")
-    void searchList() throws Exception {
+    void getList() throws Exception {
 
         List<Concert> concerts = new ArrayList<>(List.of(
                 new Concert(1L, "A 콘서트", "A"),
                 new Concert(2L, "B 콘서트", "B")
         ));
-        given(concertFacade.searchList()).willReturn(concerts);
+        given(concertService.getList()).willReturn(concerts);
 
         mockMvc.perform(get("/concert/list"))
                 .andExpect(status().isOk());
@@ -56,7 +55,7 @@ class ConcertControllerTest {
 
     @Test
     @DisplayName("GET /concert/schedules/{concertId} 콘서트 예약 가능 날짜 조회")
-    void searchSchedules() throws Exception {
+    void getSchedules() throws Exception {
 
         Long concertId = 1L;
         String token = UUID.randomUUID().toString();
@@ -74,9 +73,9 @@ class ConcertControllerTest {
             idList.add(schedule.getId());
         }
 
-        given(concertFacade.searchSchedules(concertId)).willReturn(concertSchedules);
-        given(concertFacade.getConcertScheduleDates(concertSchedules)).willReturn(dates);
-        given(concertFacade.getConcertScheduleId(concertSchedules)).willReturn(idList);
+        given(concertService.getSchedules(concertId)).willReturn(concertSchedules);
+        given(concertService.getConcertScheduleDates(concertSchedules)).willReturn(dates);
+        given(concertService.getConcertScheduleIds(concertSchedules)).willReturn(idList);
 
         mockMvc.perform(get("/concert/schedules/{concertId}", concertId)
                 .header("Authorization", token))
@@ -86,7 +85,7 @@ class ConcertControllerTest {
 
     @Test
     @DisplayName("GET /concert/seats/{concertScheduleId} 콘서트 예약 가능 좌석 조회")
-    void searchSeats() throws Exception {
+    void getSeats() throws Exception {
 
         long concertScheduleId = 1L;
         LocalDate concertDate = LocalDate.parse("2024-07-10");
@@ -96,7 +95,7 @@ class ConcertControllerTest {
                 List.of(1, BigDecimal.valueOf(1000), "AVAILABLE"),
                 List.of(2, BigDecimal.valueOf(1000), "AVAILABLE")
         );
-        given(concertFacade.searchSeats(concertScheduleId, concertDate)).willReturn(seatsInfo);
+        given(concertService.getSeats(concertScheduleId, concertDate)).willReturn(seatsInfo);
 
         mockMvc.perform(get("/concert/seats/{concertScheduleId}", concertScheduleId)
                         .header("Authorization", token))
@@ -124,12 +123,32 @@ class ConcertControllerTest {
             new Reservation(2L, 2L, userId, concertName, concertDate, RESERVING, LocalDateTime.now(), null),
             new Reservation(3L, 3L, userId, concertName, concertDate, RESERVING, LocalDateTime.now(), null)
         );
-        given(concertFacade.bookingSeats(userId, concertScheduleId, concertDate, concertSeatNumbers)).willReturn(reservations);
+        given(concertService.bookingSeats(userId, concertScheduleId, concertDate, concertSeatNumbers)).willReturn(reservations);
 
         mockMvc.perform(post("/concert/seats/booking")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(req)
                         .header("Authorization", token))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+    }
+
+    @Test
+    @DisplayName("POST /concert/payment 결제")
+    void pay() throws Exception {
+
+        Concert concert = Concert.create(1L, "A 콘서트", "A");
+        ConcertSchedule concertSchedule = ConcertSchedule.create(1L, concert, LocalDate.parse("2024-07-10"));
+        ConcertSeat concertSeat = new ConcertSeat(1L, 0L, concert, concertSchedule, 1L, 1, BigDecimal.valueOf(1000), ConcertSeatStatus.TEMPORARY, null, null);
+        given(concertService.pay(1L, 1L)).willReturn(concertSeat);
+
+        PayRequest payRequest = new PayRequest(1L, 1L);
+        String req = objectMapper.writeValueAsString(payRequest);
+
+        mockMvc.perform(post("/concert/payment")
+                        .header("Authorization", "valid-token")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(req))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON));
     }

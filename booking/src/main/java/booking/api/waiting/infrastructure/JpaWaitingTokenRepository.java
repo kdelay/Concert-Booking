@@ -30,4 +30,7 @@ public interface JpaWaitingTokenRepository extends JpaRepository<WaitingTokenEnt
      */
     @Query("select wt from WaitingTokenEntity wt where wt.waitingTokenStatus = 'DEACTIVATE' order by wt.id asc limit 3")
     List<WaitingTokenEntity> findDeactivateTokens();
+
+    @Query("select wt from WaitingTokenEntity wt where wt.userEntity.id = :userId")
+    WaitingTokenEntity findByUserId(@Param("userId") Long userId);
 }

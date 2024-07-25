@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDate;
 import java.util.List;
 
+import static booking.api.concert.infrastructure.ConcertMapper.*;
 import static booking.support.exception.ErrorCode.*;
 
 @Repository
@@ -23,7 +24,7 @@ public class ConcertRepositoryImpl implements ConcertRepository {
 
     @Override
     public Concert findByConcertId(Long concertId) {
-        return ConcertMapper.toDomain(jpaConcertRepository.findById(concertId)
+        return toDomain(jpaConcertRepository.findById(concertId)
                 .orElseThrow(() -> new CustomNotFoundException(CONCERT_IS_NOT_FOUND,
                         "해당하는 콘서트가 없습니다. [concertId : %d]".formatted(concertId)))
         );
@@ -31,13 +32,13 @@ public class ConcertRepositoryImpl implements ConcertRepository {
 
     @Override
     public List<Concert> findAllConcerts() {
-        return ConcertMapper.toDomainList(jpaConcertRepository.findAll());
+        return toDomainList(jpaConcertRepository.findAll());
     }
 
     @Override
-    public List<ConcertSchedule> findByConcertEntity(Concert concert) {
-        return ConcertMapper.scheduleToDomainList(
-                jpaConcertScheduleRepository.findByConcertEntity(ConcertMapper.toEntity(concert))
+    public List<ConcertSchedule> findSchedulesByConcert(Concert concert) {
+        return scheduleToDomainList(
+                jpaConcertScheduleRepository.findByConcertEntity(toEntity(concert))
         );
     }
 
@@ -47,24 +48,24 @@ public class ConcertRepositoryImpl implements ConcertRepository {
      * @return 콘서트 날짜 정보
      */
     @Override
-    public ConcertSchedule findByScheduleIdAndConcertDate(Long concertScheduleId, LocalDate concertDate) {
-        return ConcertMapper.scheduleToDomain(jpaConcertScheduleRepository.findByIdAndConcertDate(concertScheduleId, concertDate)
+    public ConcertSchedule findScheduleByDate(Long concertScheduleId, LocalDate concertDate) {
+        return scheduleToDomain(jpaConcertScheduleRepository.findByIdAndConcertDate(concertScheduleId, concertDate)
                 .orElseThrow(() -> new CustomNotFoundException(CONCERT_SCHEDULE_IS_NOT_FOUND, "[%s] 해당하는 콘서트 날짜를 찾을 수 없습니다.".formatted(concertDate))));
     }
 
     @Override
     public ConcertSeat findBySeatId(Long concertSeatId) {
-        return ConcertMapper.seatToDomain(
+        return seatToDomain(
                 jpaConcertSeatRepository.findById(concertSeatId)
                         .orElseThrow(() -> new CustomNotFoundException(CONCERT_SEAT_IS_NOT_FOUND, "해당하는 좌석이 없습니다."))
         );
     }
 
     @Override
-    public List<ConcertSeat> findByConcertAndSchedule(Concert concert, ConcertSchedule concertSchedule) {
-        return ConcertMapper.seatToDomainList(
+    public List<ConcertSeat> findSeats(Concert concert, ConcertSchedule concertSchedule) {
+        return seatToDomainList(
                 jpaConcertSeatRepository.findByConcertEntityAndConcertScheduleEntity(
-                ConcertMapper.toEntity(concert), ConcertMapper.scheduleToEntity(concertSchedule))
+                toEntity(concert), scheduleToEntity(concertSchedule))
         );
     }
 
@@ -75,9 +76,9 @@ public class ConcertRepositoryImpl implements ConcertRepository {
      * @return 콘서트 좌석 정보
      */
     @Override
-    public ConcertSeat findByConcertAndScheduleAndSeatNumber(Long concertId, Long concertScheduleId, int seatNumber) {
-        return ConcertMapper.seatToDomain(
-                jpaConcertSeatRepository.findByConcertAndScheduleAndSeatNumber(
+    public ConcertSeat findSeatsBySeatNumber(Long concertId, Long concertScheduleId, int seatNumber) {
+        return seatToDomain(
+                jpaConcertSeatRepository.findSeatsBySeatNumber(
                         concertId, concertScheduleId, seatNumber)
                         .orElseThrow(() -> new CustomNotFoundException(CONCERT_SEAT_IS_NOT_FOUND, "[%d] 좌석 번호가 없습니다.".formatted(seatNumber)))
         );
@@ -85,36 +86,50 @@ public class ConcertRepositoryImpl implements ConcertRepository {
 
     @Override
     public ConcertSeat saveConcertSeat(ConcertSeat concertSeat) {
-        return ConcertMapper.seatToDomain(jpaConcertSeatRepository.save(ConcertMapper.seatToEntity(concertSeat)));
+        return seatToDomain(jpaConcertSeatRepository.save(seatToEntity(concertSeat)));
+    }
+
+    @Override
+    public List<ConcertSeat> saveAllSeats(List<ConcertSeat> seatList) {
+        return seatToDomainList(jpaConcertSeatRepository.saveAll(seatList.stream()
+                .map(ConcertMapper::seatToEntity).toList()));
     }
 
     @Override
     public Reservation findByReservationId(Long reservationId) {
-        return ConcertMapper.reservationToDomain(jpaReservationRepository.findById(reservationId)
+        return reservationToDomain(jpaReservationRepository.findById(reservationId)
                 .orElseThrow(() -> new CustomNotFoundException(RESERVATION_IS_NOT_FOUND, "해당하는 예약이 없습니다.")));
     }
 
     @Override
     public List<Reservation> findAllByReservationStatus(ReservationStatus reservationStatus) {
-        return ConcertMapper.reservationToDomainList(jpaReservationRepository.findAllByReservationStatus(reservationStatus));
+        return reservationToDomainList(jpaReservationRepository.findAllByReservationStatus(reservationStatus));
     }
 
     @Override
     public Reservation saveReservation(Reservation reservation) {
-        return ConcertMapper.reservationToDomain(jpaReservationRepository.save(ConcertMapper.reservationToEntity(reservation)));
+        return reservationToDomain(jpaReservationRepository.save(reservationToEntity(reservation)));
     }
 
-    /**
-     * @param reservation 예약 정보
-     * @return 결제 정보
-     */
     @Override
-    public Payment findPaymentByReservation(Reservation reservation) {
-        return ConcertMapper.paymentToDomain(jpaPaymentRepository.findByReservationEntity(ConcertMapper.reservationToEntity(reservation)));
+    public List<Reservation> saveAllReservations(List<Reservation> reservationList) {
+        return reservationToDomainList(jpaReservationRepository.saveAll(reservationList.stream()
+                .map(ConcertMapper::reservationToEntity).toList()));
+    }
+
+    @Override
+    public Payment findPaymentByReservation(Long reservationId) {
+        return paymentToDomain(jpaPaymentRepository.findByReservationId(reservationId));
     }
 
     @Override
     public Payment savePayment(Payment payment) {
-        return ConcertMapper.paymentToDomain(jpaPaymentRepository.save(ConcertMapper.paymentToEntity(payment)));
+        return paymentToDomain(jpaPaymentRepository.save(paymentToEntity(payment)));
+    }
+
+    @Override
+    public List<Payment> saveAllPayments(List<Payment> paymentList) {
+        return paymentToDomainList(jpaPaymentRepository.saveAll(paymentList.stream()
+                .map(ConcertMapper::paymentToEntity).toList()));
     }
 }
