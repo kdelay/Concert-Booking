@@ -20,6 +20,10 @@ public class WaitingTokenEntity {
     @Comment("대기열 PK")
     private Long id;
 
+    @Version
+    @Comment("버전")
+    private Long version;
+
     @ManyToOne
     @JoinColumn(name = "user_id")
     @Comment("유저 PK")
@@ -42,6 +46,7 @@ public class WaitingTokenEntity {
     @Builder
     public WaitingTokenEntity(
             Long id,
+            Long version,
             UserEntity userEntity,
             String token,
             WaitingTokenStatus waitingTokenStatus,
@@ -49,6 +54,7 @@ public class WaitingTokenEntity {
             LocalDateTime modifiedAt
     ) {
         this.id = id;
+        this.version = version;
         this.userEntity = userEntity;
         this.token = token;
         this.waitingTokenStatus = waitingTokenStatus;

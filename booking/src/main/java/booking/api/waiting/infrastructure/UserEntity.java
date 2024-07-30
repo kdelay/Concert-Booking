@@ -1,9 +1,6 @@
 package booking.api.waiting.infrastructure;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -18,7 +15,7 @@ import java.util.Objects;
 @Table(name = "\"user\"")
 public class UserEntity {
 
-    @Id
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Comment("유저 PK")
     private Long id;
 

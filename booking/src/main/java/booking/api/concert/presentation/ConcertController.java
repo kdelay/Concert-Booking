@@ -1,11 +1,10 @@
 package booking.api.concert.presentation;
 
-import booking.api.concert.application.ConcertFacade;
-import booking.api.concert.domain.Concert;
-import booking.api.concert.domain.ConcertSchedule;
-import booking.api.concert.domain.Reservation;
+import booking.api.concert.domain.*;
 import booking.api.concert.presentation.request.BookingSeatsRequest;
+import booking.api.concert.presentation.request.PayRequest;
 import booking.api.concert.presentation.response.BookingSeatsResponse;
+import booking.api.concert.presentation.response.PayResponse;
 import booking.api.concert.presentation.response.SearchScheduleResponse;
 import booking.api.concert.presentation.response.SearchSeatsResponse;
 import booking.support.Authorization;
@@ -21,35 +20,42 @@ import java.util.List;
 @RequestMapping("/concert")
 public class ConcertController {
 
-    private final ConcertFacade concertFacade;
+    private final ConcertService concertService;
 
     @GetMapping("/list")
     public List<Concert> getList() {
-        return concertFacade.getList();
+        return concertService.getList();
     }
 
     @Authorization
     @GetMapping("/schedules/{concertId}")
-    public SearchScheduleResponse searchSchedules(@PathVariable Long concertId) {
-        List<ConcertSchedule> concertSchedules = concertFacade.searchSchedules(concertId);
+    public SearchScheduleResponse getSchedules(@PathVariable Long concertId) {
+        List<ConcertSchedule> concertSchedules = concertService.getSchedules(concertId);
         return new SearchScheduleResponse(
-                concertFacade.getConcertScheduleDates(concertSchedules),
-                concertFacade.getConcertScheduleId(concertSchedules)
+                concertService.getConcertScheduleDates(concertSchedules),
+                concertService.getConcertScheduleIds(concertSchedules)
         );
     }
 
     @Authorization
     @GetMapping("/seats/{concertScheduleId}")
-    public List<SearchSeatsResponse> searchSeats(
+    public List<SearchSeatsResponse> getSeats(
             @PathVariable long concertScheduleId, @PathParam("concertDate") LocalDate concertDate
     ) {
-        return SearchSeatsResponse.of(concertFacade.searchSeats(concertScheduleId, concertDate));
+        return SearchSeatsResponse.of(concertService.getSeats(concertScheduleId, concertDate));
     }
 
     @Authorization
     @PostMapping("/seats/booking")
     public List<BookingSeatsResponse> bookingSeats(@RequestBody BookingSeatsRequest request) {
-        List<Reservation> reservations = concertFacade.bookingSeats(request.userId(), request.concertScheduleId(), request.concertDate(), request.seatNumberList());
+        List<Reservation> reservations = concertService.bookingSeats(request.userId(), request.concertScheduleId(), request.concertDate(), request.seatNumberList());
         return BookingSeatsResponse.of(reservations);
+    }
+
+    @Authorization
+    @PostMapping("/payment")
+    public PayResponse pay(@RequestBody PayRequest request) {
+        ConcertSeat concertSeat = concertService.pay(request.concertSeatId(), request.reservationId());
+        return new PayResponse(concertSeat.getSeatNumber());
     }
 }

@@ -1,13 +1,14 @@
 package booking.api.waiting.domain;
 
 import booking.support.exception.CustomNotFoundException;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.UUID;
 
-import static booking.api.waiting.domain.WaitingTokenStatus.DEACTIVATE;
+import static booking.api.waiting.domain.WaitingTokenStatus.*;
 import static booking.support.exception.ErrorCode.USER_IS_NOT_FOUND;
 import static booking.support.exception.ErrorCode.WAITING_TOKEN_IS_NOT_FOUND;
 
@@ -15,6 +16,7 @@ import static booking.support.exception.ErrorCode.WAITING_TOKEN_IS_NOT_FOUND;
 public class WaitingToken {
 
     private final Long id;
+    private Long version;
     private final User user;
     private final String token;
     private WaitingTokenStatus waitingTokenStatus;
@@ -23,6 +25,7 @@ public class WaitingToken {
 
     public WaitingToken(
             Long id,
+            Long version,
             User user,
             String token,
             WaitingTokenStatus waitingTokenStatus,
@@ -32,6 +35,7 @@ public class WaitingToken {
         if (user == null || user.getId() == null) throw new CustomNotFoundException(USER_IS_NOT_FOUND, "[WaitingToken - user/userId] is null");
         if (waitingTokenStatus == null) throw new CustomNotFoundException(WAITING_TOKEN_IS_NOT_FOUND, "[WaitingToken - status] is null");
         this.id = id;
+        this.version = version;
         this.user = user;
         this.token = token;
         this.waitingTokenStatus = waitingTokenStatus;
@@ -49,6 +53,7 @@ public class WaitingToken {
     ) {
         return new WaitingToken(
                 null,
+                0L,
                 user,
                 UUID.randomUUID().toString(),
                 DEACTIVATE,
@@ -58,25 +63,45 @@ public class WaitingToken {
     }
 
     /**
-     * @return 토큰 생성 시간(localDateTime) -> ms 시간으로 변경
+     * 대기열 입장 가능 시간 = 토큰 생성 시간 + ((대기열 순서 번호 / 분당 처리량) * 대기열 처리 시간)
+     * @return 토큰 활성화 가능 여부
      */
-    public static long getCreatedAtToMilli(LocalDateTime createdAt) {
-        return createdAt.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+    public boolean isEntryTime(long rank, int entryAmount, long processTime) {
+        //토큰 생성 시간(ms)
+        long tokenCreatedAt = this.createdAt.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+
+        //대기열 입장 가능 시간
+        long entryAccessTime = tokenCreatedAt + ((rank / entryAmount) * processTime);
+
+        return tokenCreatedAt >= entryAccessTime;
     }
 
     /**
      * 대기열 토큰 상태 변경
      * @param waitingTokenStatus 대기열 토큰 상태(DEACTIVATE, ACTIVATE, EXPIRED)
      */
-    public void updateWaitingTokenStatus(WaitingTokenStatus waitingTokenStatus) {
+    public void updateStatus(WaitingTokenStatus waitingTokenStatus) {
         this.waitingTokenStatus = waitingTokenStatus;
     }
 
     /**
-     * 변경 시간 업데이트
-     * @param now 현재 시간
+     * 토큰 상태를 ACTIVATE 로 변경
      */
-    public void updateModifiedAt(LocalDateTime now) {
-        this.modifiedAt = now;
+    public void activateToken() {
+        this.waitingTokenStatus = ACTIVATE;
+    }
+
+    /**
+     * 토큰 상태를 EXPIRED 로 변경
+     */
+    public void expiredToken() {
+        this.waitingTokenStatus = EXPIRED;
+    }
+
+    /**
+     * 변경 시간 업데이트
+     */
+    public void updateTime() {
+        this.modifiedAt = LocalDateTime.now();
     }
 }

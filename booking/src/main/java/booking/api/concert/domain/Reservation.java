@@ -16,7 +16,7 @@ public class Reservation {
     private final String concertName;
     private final LocalDate concertDate;
     private ReservationStatus reservationStatus;
-    private final LocalDateTime createdAt;
+    private LocalDateTime createdAt;
     private final LocalDateTime modifiedAt;
     private BigDecimal totalAmount = BigDecimal.ZERO;
 
@@ -40,7 +40,15 @@ public class Reservation {
         this.totalAmount = this.totalAmount.add(seatPrice);
     }
 
-    public void updateReservationStatus(ReservationStatus reservationStatus) {
-        this.reservationStatus = reservationStatus;
+    public void canceledReservation() {
+        this.reservationStatus = ReservationStatus.CANCELED;
+    }
+
+    public void reservedReservation() {
+        this.reservationStatus = ReservationStatus.RESERVED;
+    }
+
+    public void twoMinutesAgo() {
+        this.createdAt = LocalDateTime.now().minusMinutes(2);
     }
 }

@@ -21,6 +21,10 @@ public class ConcertSeatEntity {
     @Comment("콘서트 좌석 PK")
     private Long id;
 
+    @Version
+    @Comment("버전")
+    private Long version;
+
     @ManyToOne
     @JoinColumn(name = "concert_id")
     @Comment("콘서트 PK")
@@ -55,6 +59,7 @@ public class ConcertSeatEntity {
     @Builder
     public ConcertSeatEntity(
         Long id,
+        Long version,
         ConcertEntity concertEntity,
         ConcertScheduleEntity concertScheduleEntity,
         Long userId,
@@ -65,6 +70,7 @@ public class ConcertSeatEntity {
         LocalDateTime expiredAt
     ) {
         this.id = id;
+        this.version = version;
         this.concertEntity = concertEntity;
         this.concertScheduleEntity = concertScheduleEntity;
         this.userId = userId;

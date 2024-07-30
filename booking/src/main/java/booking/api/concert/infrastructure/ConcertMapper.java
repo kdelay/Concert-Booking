@@ -10,14 +10,14 @@ public class ConcertMapper {
     //concert schedule
     public static ConcertSchedule scheduleToDomain(ConcertScheduleEntity entity) {
         return ConcertSchedule.create(entity.getId(),
-                ConcertMapper.toDomain(entity.getConcertEntity()),
+                toDomain(entity.getConcertEntity()),
                 entity.getConcertDate());
     }
 
     public static ConcertScheduleEntity scheduleToEntity(ConcertSchedule concertSchedule) {
         return ConcertScheduleEntity.builder()
                 .id(concertSchedule.getId())
-                .concertEntity(ConcertMapper.toEntity(concertSchedule.getConcert()))
+                .concertEntity(toEntity(concertSchedule.getConcert()))
                 .concertDate(concertSchedule.getConcertDate())
                 .build();
     }
@@ -31,8 +31,9 @@ public class ConcertMapper {
     //concert seat
     public static ConcertSeat seatToDomain(ConcertSeatEntity entity) {
         return new ConcertSeat(entity.getId(),
-                ConcertMapper.toDomain(entity.getConcertEntity()),
-                ConcertMapper.scheduleToDomain(entity.getConcertScheduleEntity()),
+                entity.getVersion(),
+                toDomain(entity.getConcertEntity()),
+                scheduleToDomain(entity.getConcertScheduleEntity()),
                 entity.getUserId(),
                 entity.getSeatNumber(),
                 entity.getSeatPrice(),
@@ -44,8 +45,9 @@ public class ConcertMapper {
     public static ConcertSeatEntity seatToEntity(ConcertSeat concertSeat) {
         return ConcertSeatEntity.builder()
                 .id(concertSeat.getId())
-                .concertEntity(ConcertMapper.toEntity(concertSeat.getConcert()))
-                .concertScheduleEntity(ConcertMapper.scheduleToEntity(concertSeat.getConcertSchedule()))
+                .version(concertSeat.getVersion())
+                .concertEntity(toEntity(concertSeat.getConcert()))
+                .concertScheduleEntity(scheduleToEntity(concertSeat.getConcertSchedule()))
                 .userId(concertSeat.getUserId())
                 .seatNumber(concertSeat.getSeatNumber())
                 .seatPrice(concertSeat.getSeatPrice())
@@ -111,18 +113,28 @@ public class ConcertMapper {
 
     //payment
     public static Payment paymentToDomain(PaymentEntity entity) {
-        return new Payment(entity.getId(), ConcertMapper.reservationToDomain(entity.getReservationEntity()), entity.getPrice(),
-                entity.getPaymentState(), entity.getCreatedAt(), entity.getModifiedAt());
+        return new Payment(entity.getId(),
+                entity.getReservationId(),
+                entity.getPrice(),
+                entity.getPaymentState(),
+                entity.getCreatedAt(),
+                entity.getModifiedAt());
     }
 
     public static PaymentEntity paymentToEntity(Payment payment) {
         return PaymentEntity.builder()
                 .id(payment.getId())
-                .reservationEntity(ConcertMapper.reservationToEntity(payment.getReservation()))
+                .reservationId(payment.getReservationId())
                 .price(payment.getPrice())
                 .paymentState(payment.getPaymentState())
                 .createdAt(payment.getCreatedAt())
                 .modifiedAt(payment.getModifiedAt())
                 .build();
+    }
+
+    public static List<Payment> paymentToDomainList(List<PaymentEntity> entities) {
+        return entities.stream()
+                .map(ConcertMapper::paymentToDomain)
+                .toList();
     }
 }

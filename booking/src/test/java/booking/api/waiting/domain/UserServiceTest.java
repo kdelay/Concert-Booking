@@ -42,7 +42,8 @@ class UserServiceTest {
         BigDecimal amount = BigDecimal.valueOf(500);
         User user = User.create(userId, BigDecimal.ZERO);
 
-        when(waitingTokenRepository.findByUserId(userId)).thenReturn(user);
+        when(waitingTokenRepository.findLockByUserId(userId)).thenReturn(user);
+        when(waitingTokenRepository.saveUser(user)).thenReturn(user);
 
         User chargeUser = userService.charge(userId, amount);
         assertThat(chargeUser.getAmount()).isEqualTo(BigDecimal.valueOf(500));

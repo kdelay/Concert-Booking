@@ -38,4 +38,8 @@ public class User {
         this.amount = this.amount.subtract(amount);
         return this;
     }
+
+    public void resetAmount() {
+        this.amount = BigDecimal.ZERO;
+    }
 }

@@ -9,18 +9,22 @@ public interface WaitingTokenRepository {
     //user
     User findByUserId(Long userId);
 
+    User findLockByUserId(Long userId);
+
     User saveUser(User user);
 
     List<User> findUsers();
 
     //waiting token
-    WaitingToken findByToken(String token);
-
     WaitingToken save(WaitingToken waitingToken);
 
-    Long findActivateTokenSortedByIdDesc();
+    Long findLastActivateWaitingId();
 
-    WaitingToken findUsingTokenByUserId(@Param("userId") Long userId);
+    WaitingToken findNotExpiredToken(@Param("userId") Long userId);
 
-    List<WaitingToken> findByDeactivateTokens();
+    List<WaitingToken> findDeactivateTokens();
+
+    List<WaitingToken> saveAll(List<WaitingToken> waitingTokenList);
+
+    WaitingToken findWaitingByUserId(Long userId);
 }

@@ -30,7 +30,7 @@ class TokenInterceptorTest {
     @DisplayName("POST /waiting/token - 헤더 토큰 있음")
     public void testAuthorizationHeaderPresent() {
 
-        WaitingTokenRequest request = new WaitingTokenRequest(1L, 1L);
+        WaitingTokenRequest request = new WaitingTokenRequest(1L);
 
         ResponseEntity<WaitingTokenResponse> responseEntity = restTemplate.postForEntity(
                 "http://localhost:" + port + "/waiting/token",
@@ -45,7 +45,7 @@ class TokenInterceptorTest {
     @Test
     @DisplayName("POST /waiting/token - 헤더 토큰 없음")
     public void testAuthorizationHeaderAbsent() {
-        WaitingTokenRequest request = new WaitingTokenRequest(1L, 1L);
+        WaitingTokenRequest request = new WaitingTokenRequest(1L);
 
         ResponseEntity<WaitingTokenResponse> responseEntity = restTemplate.postForEntity(
                 "http://localhost:" + port + "/waiting/token",

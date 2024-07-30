@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+import static booking.api.waiting.infrastructure.WaitingTokenMapper.*;
 import static booking.support.exception.ErrorCode.USER_IS_NOT_FOUND;
 
 @Repository
@@ -20,7 +21,7 @@ public class WaitingTokenRepositoryImpl implements WaitingTokenRepository {
 
     @Override
     public User findByUserId(Long userId) {
-        return WaitingTokenMapper.userToDomain(
+        return userToDomain(
                 jpaUserRepository.findById(userId)
                         .orElseThrow(() -> new CustomNotFoundException(USER_IS_NOT_FOUND,
                                 "해당하는 유저가 없습니다. [userId : %d]".formatted(userId)))
@@ -28,41 +29,56 @@ public class WaitingTokenRepositoryImpl implements WaitingTokenRepository {
     }
 
     @Override
-    public User saveUser(User user) {
-        return WaitingTokenMapper.userToDomain(jpaUserRepository.save(WaitingTokenMapper.userToEntity(user)));
-    }
-
-    @Override
-    public List<User> findUsers() {
-        return WaitingTokenMapper.userToDomainList(jpaUserRepository.findAll());
-    }
-
-    @Override
-    public WaitingToken findByToken(String token) {
-        return WaitingTokenMapper.toDomain(jpaWaitingTokenRepository.findByToken(token).orElseThrow(() -> new IllegalArgumentException("토큰이 없습니다.")));
-    }
-
-    @Override
-    public WaitingToken save(WaitingToken waitingToken) {
-        return WaitingTokenMapper.toDomain(
-                jpaWaitingTokenRepository.save(WaitingTokenMapper.toEntity(waitingToken))
+    public User findLockByUserId(Long userId) {
+        return userToDomain(
+                jpaUserRepository.findLockById(userId)
+                        .orElseThrow(() -> new CustomNotFoundException(USER_IS_NOT_FOUND,
+                                "해당하는 유저가 없습니다. [userId : %d]".formatted(userId)))
         );
     }
 
     @Override
-    public Long findActivateTokenSortedByIdDesc() {
-        return jpaWaitingTokenRepository.findActivateTokenSortedByIdDesc().describeConstable().orElse(null);
+    public User saveUser(User user) {
+        return userToDomain(jpaUserRepository.save(userToEntity(user)));
     }
 
     @Override
-    public WaitingToken findUsingTokenByUserId(Long userId) {
-        WaitingTokenEntity waitingTokenEntity = jpaWaitingTokenRepository.findUsingTokenByUserId(userId).orElse(null);
+    public List<User> findUsers() {
+        return userToDomainList(jpaUserRepository.findAll());
+    }
+
+    @Override
+    public WaitingToken save(WaitingToken waitingToken) {
+        return toDomain(
+                jpaWaitingTokenRepository.save(toEntity(waitingToken))
+        );
+    }
+
+    @Override
+    public Long findLastActivateWaitingId() {
+        return jpaWaitingTokenRepository.findLastActivateWaitingId().describeConstable().orElse(0L);
+    }
+
+    @Override
+    public WaitingToken findNotExpiredToken(Long userId) {
+        WaitingTokenEntity waitingTokenEntity = jpaWaitingTokenRepository.findNotExpiredToken(userId).orElse(null);
         if (waitingTokenEntity == null) return null;
-        return WaitingTokenMapper.toDomain(waitingTokenEntity);
+        return toDomain(waitingTokenEntity);
     }
 
     @Override
-    public List<WaitingToken> findByDeactivateTokens() {
-        return WaitingTokenMapper.toDomainList(jpaWaitingTokenRepository.findAll());
+    public List<WaitingToken> findDeactivateTokens() {
+        return toDomainList(jpaWaitingTokenRepository.findAll());
+    }
+
+    @Override
+    public List<WaitingToken> saveAll(List<WaitingToken> waitingTokenList) {
+        return toDomainList(jpaWaitingTokenRepository.saveAll(waitingTokenList.stream()
+                .map(WaitingTokenMapper::toEntity).toList()));
+    }
+
+    @Override
+    public WaitingToken findWaitingByUserId(Long userId) {
+        return toDomain(jpaWaitingTokenRepository.findByUserId(userId));
     }
 }

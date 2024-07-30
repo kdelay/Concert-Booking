@@ -1,7 +1,7 @@
 -- 유저
 DROP TABLE IF EXISTS user;
 CREATE TABLE IF NOT EXISTS user (
-  id BIGINT NOT NULL COMMENT '유저 PK',
+  id BIGINT NOT NULL AUTO_INCREMENT COMMENT '유저 PK',
   amount DECIMAL(7,0) COMMENT '잔액',
   PRIMARY KEY (id)
 ) ENGINE=InnoDB;
@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS user (
 DROP TABLE IF EXISTS waiting_token;
 CREATE TABLE IF NOT EXISTS waiting_token (
     id BIGINT NOT NULL AUTO_INCREMENT COMMENT '대기열 PK',
+    version BIGINT DEFAULT 0 COMMENT '버전',
     user_id BIGINT COMMENT '유저 PK',
     token VARCHAR(255) NOT NULL COMMENT '토큰 정보(uuid)',
     waiting_token_status ENUM('ACTIVATE','DEACTIVATE','EXPIRED') COMMENT '대기열 토큰 상태',
@@ -41,6 +42,7 @@ CREATE TABLE IF NOT EXISTS concert_schedule (
 DROP TABLE IF EXISTS concert_seat;
 CREATE TABLE IF NOT EXISTS concert_seat (
     id BIGINT NOT NULL AUTO_INCREMENT COMMENT '콘서트 좌석 PK',
+    version BIGINT DEFAULT 0 COMMENT '버전',
     concert_id BIGINT COMMENT '콘서트 PK',
     concert_schedule_id BIGINT COMMENT '콘서트 날짜 PK',
     seat_number INT NOT NULL COMMENT '콘서트 좌석 번호',

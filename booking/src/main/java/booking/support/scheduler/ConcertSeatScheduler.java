@@ -1,6 +1,6 @@
 package booking.support.scheduler;
 
-import booking.api.concert.application.ConcertFacade;
+import booking.api.concert.domain.ConcertService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -9,11 +9,11 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class ConcertSeatScheduler {
 
-    private final ConcertFacade concertFacade;
+    private final ConcertService concertService;
 
     //매 1분마다 스케줄러 작동
     @Scheduled(fixedRate = 60000)
-    public void checkExpiredTimeForSeat() {
-        concertFacade.checkExpiredTimeForSeat();
+    public void expiredToken() {
+        concertService.expiredToken();
     }
 }

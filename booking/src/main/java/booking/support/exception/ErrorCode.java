@@ -9,6 +9,7 @@ public enum ErrorCode {
 
     //user
     USER_IS_NOT_FOUND("유저가 존재하지 않습니다."),
+    USER_AMOUNT_IS_NOT_ENOUGH("잔액이 부족합니다."),
 
     //waiting token
     WAITING_TOKEN_IS_NOT_FOUND("대기열 토큰이 존재하지 않습니다."),

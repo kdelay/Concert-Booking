@@ -13,18 +13,20 @@ public interface ConcertRepository {
     List<Concert> findAllConcerts();
 
     //concert schedule
-    List<ConcertSchedule> findByConcertEntity(Concert concert);
+    List<ConcertSchedule> findSchedulesByConcert(Concert concert);
 
-    ConcertSchedule findByScheduleIdAndConcertDate(Long concertScheduleId, LocalDate concertDate);
+    ConcertSchedule findScheduleByDate(Long concertScheduleId, LocalDate concertDate);
 
     //concert seat
     ConcertSeat findBySeatId(Long concertSeatId);
 
-    List<ConcertSeat> findByConcertAndSchedule(Concert concert, ConcertSchedule concertSchedule);
+    List<ConcertSeat> findSeats(Concert concert, ConcertSchedule concertSchedule);
 
-    ConcertSeat findByConcertAndScheduleAndSeatNumber(Long concertId, Long concertScheduleId, int seatNumber);
+    ConcertSeat findSeatsBySeatNumber(Long concertId, Long concertScheduleId, int seatNumber);
 
     ConcertSeat saveConcertSeat(ConcertSeat concertSeat);
+
+    List<ConcertSeat> saveAllSeats(List<ConcertSeat> seatList);
 
     //reservation
     Reservation findByReservationId(Long reservationId);
@@ -33,8 +35,12 @@ public interface ConcertRepository {
 
     Reservation saveReservation(Reservation reservation);
 
+    List<Reservation> saveAllReservations(List<Reservation> reservationList);
+
     //payment
-    Payment findPaymentByReservation(Reservation reservation);
+    Payment findPaymentByReservation(Long reservationId);
 
     Payment savePayment(Payment payment);
+
+    List<Payment> saveAllPayments(List<Payment> paymentList);
 }

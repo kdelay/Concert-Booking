@@ -10,17 +10,19 @@ import java.time.LocalDateTime;
 public class ConcertSeat {
 
     private final Long id;
+    private Long version;
     private final Concert concert;
     private final ConcertSchedule concertSchedule;
     private Long userId;
-    private int seatNumber;
+    private final int seatNumber;
     private final BigDecimal seatPrice;
     private ConcertSeatStatus seatStatus;
-    private final LocalDateTime modifiedAt;
+    private LocalDateTime modifiedAt;
     private final LocalDateTime expiredAt;
 
-    public ConcertSeat(Long id, Concert concert, ConcertSchedule concertSchedule, Long userId, int seatNumber, BigDecimal seatPrice, ConcertSeatStatus seatStatus, LocalDateTime modifiedAt, LocalDateTime expiredAt) {
+    public ConcertSeat(Long id, Long version, Concert concert, ConcertSchedule concertSchedule, Long userId, int seatNumber, BigDecimal seatPrice, ConcertSeatStatus seatStatus, LocalDateTime modifiedAt, LocalDateTime expiredAt) {
         this.id = id;
+        this.version = version;
         this.concert = concert;
         this.concertSchedule = concertSchedule;
         this.userId = userId;
@@ -31,11 +33,23 @@ public class ConcertSeat {
         this.expiredAt = expiredAt;
     }
 
-    public void updateSeatStatus(ConcertSeatStatus seatStatus) {
-        this.seatStatus = seatStatus;
+    public void temporarySeat() {
+        this.seatStatus = ConcertSeatStatus.TEMPORARY;
+    }
+
+    public void availableSeat() {
+        this.seatStatus = ConcertSeatStatus.AVAILABLE;
+    }
+
+    public void reservedSeat() {
+        this.seatStatus = ConcertSeatStatus.RESERVED;
     }
 
     public void setUserId(long userId) {
         this.userId = userId;
+    }
+
+    public void updateTime() {
+        this.modifiedAt = LocalDateTime.now();
     }
 }

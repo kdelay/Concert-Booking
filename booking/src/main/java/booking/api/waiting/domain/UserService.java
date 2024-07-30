@@ -19,11 +19,12 @@ public class UserService {
      * @param amount 잔액
      * @return 충전 후 유저 잔액 정보
      */
+    @Transactional
     public User charge(Long userId, BigDecimal amount) {
 
         if(amount.equals(BigDecimal.ZERO)) throw new IllegalArgumentException("충전 금액이 0원입니다.");
         //유저 조회
-        User user = waitingTokenRepository.findByUserId(userId);
+        User user = waitingTokenRepository.findLockByUserId(userId);
         user.chargeAmount(amount);
         return waitingTokenRepository.saveUser(user);
     }

@@ -4,7 +4,6 @@ import booking.api.concert.domain.enums.ConcertSeatStatus;
 import booking.api.concert.domain.enums.PaymentState;
 import booking.api.concert.domain.enums.ReservationStatus;
 import booking.api.waiting.domain.User;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -12,14 +11,15 @@ import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
-import static booking.api.concert.domain.enums.ConcertSeatStatus.RESERVED;
+import static booking.api.concert.domain.enums.ConcertSeatStatus.AVAILABLE;
 import static booking.api.concert.domain.enums.ConcertSeatStatus.TEMPORARY;
-import static booking.api.concert.domain.enums.ReservationStatus.*;
 import static booking.api.concert.domain.enums.ReservationStatus.CANCELED;
-import static org.assertj.core.api.Assertions.*;
+import static booking.api.concert.domain.enums.ReservationStatus.RESERVING;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class ConcertDomainTest {
 
@@ -38,11 +38,11 @@ public class ConcertDomainTest {
            new ConcertSchedule(1L, concert, LocalDate.parse("2024-07-18")),
            new ConcertSchedule(2L, concert, LocalDate.parse("2024-07-19"))
         ));
-        concertSeat = new ConcertSeat(1L, concert, concertScheduleList.get(0), null, 1, BigDecimal.valueOf(1000),
+        concertSeat = new ConcertSeat(1L, 0L, concert, concertScheduleList.get(0), null, 1, BigDecimal.valueOf(1000),
                 ConcertSeatStatus.AVAILABLE, null, null);
         reservation = new Reservation(1L, 1L, 1L, concert.getName(), concertScheduleList.get(0).getConcertDate(),
                 RESERVING, LocalDateTime.now(), null);
-        payment = new Payment(1L, reservation, BigDecimal.valueOf(1000),
+        payment = new Payment(1L, reservation.getId(), BigDecimal.valueOf(1000),
                 PaymentState.PENDING, LocalDateTime.now(), null);
     }
 
@@ -50,11 +50,14 @@ public class ConcertDomainTest {
     @DisplayName("콘서트 좌석 상태 변경")
     void updateSeatStatus() {
 
-        concertSeat.updateSeatStatus(TEMPORARY);
+        concertSeat.temporarySeat();
         assertThat(concertSeat.getSeatStatus()).isEqualTo(TEMPORARY);
 
-        concertSeat.updateSeatStatus(RESERVED);
-        assertThat(concertSeat.getSeatStatus()).isEqualTo(RESERVED);
+        concertSeat.availableSeat();
+        assertThat(concertSeat.getSeatStatus()).isEqualTo(AVAILABLE);
+
+        concertSeat.reservedSeat();
+        assertThat(concertSeat.getSeatStatus()).isEqualTo(ConcertSeatStatus.RESERVED);
     }
 
     @Test
@@ -68,6 +71,15 @@ public class ConcertDomainTest {
     }
 
     @Test
+    @DisplayName("변경 시간 업데이트")
+    void seatUpdateModifiedAt() {
+        LocalDateTime now = LocalDateTime.now();
+        concertSeat.updateTime();
+        LocalDateTime afterUpdate = concertSeat.getModifiedAt();
+        assertThat(afterUpdate.truncatedTo(ChronoUnit.MILLIS)).isEqualTo(now.truncatedTo(ChronoUnit.MILLIS));
+    }
+
+    @Test
     @DisplayName("예약 총 금액")
     void setTotalPrice() {
         reservation.setTotalPrice(BigDecimal.valueOf(2000));
@@ -77,20 +89,20 @@ public class ConcertDomainTest {
     @Test
     @DisplayName("예약 상태 변경")
     void updateReservationStatus() {
-        reservation.updateReservationStatus(ReservationStatus.RESERVED);
+        reservation.reservedReservation();
         assertThat(reservation.getReservationStatus()).isEqualTo(ReservationStatus.RESERVED);
 
-        reservation.updateReservationStatus(CANCELED);
+        reservation.canceledReservation();
         assertThat(reservation.getReservationStatus()).isEqualTo(CANCELED);
     }
 
     @Test
     @DisplayName("결제 상태 변경")
     void updatePaymentStatus() {
-        payment.updatePaymentStatus(PaymentState.COMPLETED);
+        payment.completedPayment();
         assertThat(payment.getPaymentState()).isEqualTo(PaymentState.COMPLETED);
 
-        payment.updatePaymentStatus(PaymentState.CANCELED);
+        payment.canceledPayment();
         assertThat(payment.getPaymentState()).isEqualTo(PaymentState.CANCELED);
     }
 }
