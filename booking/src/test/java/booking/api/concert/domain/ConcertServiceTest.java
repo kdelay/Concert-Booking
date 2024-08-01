@@ -71,14 +71,14 @@ class ConcertServiceTest {
 
     @Test
     @DisplayName("콘서트 조회")
-    void getList() {
+    void getConcertsWithCache() {
         List<Concert> concerts = List.of(
             new Concert(1L, "A 콘서트", "A"),
             new Concert(1L, "A 콘서트", "B")
         );
         when(concertRepository.findAllConcerts()).thenReturn(concerts);
 
-        List<Concert> concertList = concertService.getList();
+        List<Concert> concertList = concertService.getConcertsWithCache();
         assertThat(concertList).hasSize(2);
     }
 

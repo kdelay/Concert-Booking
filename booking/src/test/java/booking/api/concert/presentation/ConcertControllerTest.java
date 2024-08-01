@@ -47,7 +47,7 @@ class ConcertControllerTest {
                 new Concert(1L, "A 콘서트", "A"),
                 new Concert(2L, "B 콘서트", "B")
         ));
-        given(concertService.getList()).willReturn(concerts);
+        given(concertService.getConcertsWithCache()).willReturn(concerts);
 
         mockMvc.perform(get("/concert/list"))
                 .andExpect(status().isOk());

@@ -5,6 +5,7 @@ import booking.api.waiting.domain.WaitingToken;
 import booking.api.waiting.domain.WaitingTokenRepository;
 import booking.support.exception.CustomBadRequestException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,7 +32,8 @@ public class ConcertService {
      * 콘서트 목록 조회
      * @return 콘서트 목록
      */
-    public List<Concert> getList() {
+    @Cacheable(cacheNames = "concerts", cacheManager = "redisCacheManager")
+    public List<Concert> getConcertsWithCache() {
         return concertRepository.findAllConcerts();
     }
 
@@ -39,6 +41,7 @@ public class ConcertService {
      * @param concertId 콘서트 PK
      * @return 콘서트 날짜 정보
      */
+    @Cacheable(cacheNames = "concertSchedules", key = "#concertId", cacheManager = "redisCacheManager")
     public List<ConcertSchedule> getSchedules(Long concertId) {
 
         //콘서트 정보 조회

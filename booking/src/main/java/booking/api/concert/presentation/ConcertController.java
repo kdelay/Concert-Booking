@@ -24,7 +24,7 @@ public class ConcertController {
 
     @GetMapping("/list")
     public List<Concert> getList() {
-        return concertService.getList();
+        return concertService.getConcertsWithCache();
     }
 
     @Authorization
