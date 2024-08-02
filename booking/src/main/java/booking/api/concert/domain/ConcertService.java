@@ -1,10 +1,11 @@
 package booking.api.concert.domain;
 
 import booking.api.waiting.domain.User;
-import booking.api.waiting.domain.WaitingToken;
 import booking.api.waiting.domain.WaitingTokenRepository;
 import booking.support.exception.CustomBadRequestException;
 import lombok.RequiredArgsConstructor;
+import org.redisson.api.RSetMultimap;
+import org.redisson.api.RedissonClient;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,8 +14,11 @@ import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static booking.api.concert.domain.enums.ConcertSeatStatus.AVAILABLE;
 import static booking.api.concert.domain.enums.PaymentState.COMPLETED;
@@ -27,6 +31,7 @@ public class ConcertService {
 
     private final ConcertRepository concertRepository;
     private final WaitingTokenRepository waitingTokenRepository;
+    private final RedissonClient redissonClient;
 
     /**
      * 콘서트 목록 조회
@@ -111,7 +116,9 @@ public class ConcertService {
      * @return 예약 정보 리스트 배열
      */
     @Transactional
-    public List<Reservation> bookingSeats(long userId, long concertScheduleId, LocalDate concertDate, List<Integer> seatNumberList) {
+    public List<Reservation> bookingSeats(
+            long userId, long concertScheduleId, LocalDate concertDate, List<Integer> seatNumberList, String token
+    ) {
 
         //콘서트 날짜 정보 조회
         ConcertSchedule concertSchedule = concertRepository.findScheduleByDate(concertScheduleId, concertDate);
@@ -124,6 +131,17 @@ public class ConcertService {
         //결제 정보 저장
         reservations.forEach(reservation ->
                 concertRepository.savePayment(Payment.create(reservation.getId(), reservation.getTotalAmount())));
+
+        RSetMultimap<String, Long> activeTokens = redissonClient.getSetMultimap("activeTokens");
+
+        //5분 후 만료 ttl 설정
+        long expiredAt = LocalDateTime.now().plusMinutes(5)
+                .atZone(ZoneId.systemDefault())
+                .toInstant()
+                .toEpochMilli();
+
+        activeTokens.get(token).forEach(t -> activeTokens.put(token, expiredAt));
+
         return reservations;
     }
 
@@ -182,14 +200,24 @@ public class ConcertService {
             //결제 상태가 완료 상태가 아닌 경우
             if (paymentByReservation.getPaymentState() != COMPLETED) {
 
+                long curTime = LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+
+                RSetMultimap<String, Long> activeTokens = redissonClient.getSetMultimap("activeTokens");
+
+                //activeToken 에서 value 값이 curTime 보다 크거나 같은 데이터를 가져온다.
+                Set<String> filteredKeys = activeTokens.readAllKeySet().stream()
+                        .filter(key -> activeTokens.get(key).stream()
+                                .anyMatch(value -> value >= curTime))
+                        .collect(Collectors.toSet());
+
                 //예약 생성 시간
                 LocalDateTime createdAt = reservation.getCreatedAt();
 
                 //예약 가능 시간
                 Duration duration = Duration.between(createdAt, now);
 
-                //1분이라고 가정하고, 1분이 지난 경우
-                if (duration.toSeconds() > 60) {
+                //5분이 지난 경우
+                if (duration.toSeconds() > 300) {
                     //예약 취소
                     reservation.canceledReservation();
                     concertRepository.saveReservation(reservation);
@@ -205,9 +233,7 @@ public class ConcertService {
                     concertRepository.saveConcertSeat(concertSeat);
 
                     //대기열 토큰 만료
-                    WaitingToken waitingToken = waitingTokenRepository.findNotExpiredToken(reservation.getUserId());
-                    waitingToken.expiredToken();
-                    waitingTokenRepository.save(waitingToken);
+                    filteredKeys.forEach(activeTokens::removeAll);
                 }
             }
         });
@@ -220,7 +246,7 @@ public class ConcertService {
      * @return 콘서트 좌석 정보
      */
     @Transactional
-    public ConcertSeat pay(Long concertSeatId, Long reservationId) {
+    public ConcertSeat pay(Long concertSeatId, Long reservationId, String token) {
 
         //예약 정보 가져오기
         Reservation reservation = concertRepository.findByReservationId(reservationId);
@@ -253,6 +279,9 @@ public class ConcertService {
         //Reservation 상태 변경
         reservation.reservedReservation();
         concertRepository.saveReservation(reservation);
+
+        //token 만료
+        redissonClient.getSetMultimap("activeTokens").removeAll(token);
 
         return concertSeat;
     }

@@ -1,8 +1,10 @@
 package booking.api.waiting.domain;
 
 import booking.support.exception.CustomBadRequestException;
+import booking.support.exception.CustomNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.redisson.api.RScoredSortedSet;
+import org.redisson.api.RSetMultimap;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -10,9 +12,9 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 import static booking.support.exception.ErrorCode.WAITING_TOKEN_ALREADY_EXISTS;
+import static booking.support.exception.ErrorCode.WAITING_TOKEN_IS_NOT_FOUND;
 
 @Service
 @RequiredArgsConstructor
@@ -40,12 +42,13 @@ public class QueueService {
     }
 
     public long getRank(String token) {
-        return getWaitingTokens().rank(token);
+        Integer rank = getWaitingTokens().rank(token);
+        if (rank == null) throw new CustomNotFoundException(WAITING_TOKEN_IS_NOT_FOUND, "이미 입장하거나 없는 토큰입니다.");
+        return rank;
     }
 
     public String getTtl(String token) {
         int expectedWaitingTime = getExpectedWaitingTime(token);
-        System.out.println("expectedWaitingTime = " + expectedWaitingTime);
         return String.format("%d분 %02d초",
                 expectedWaitingTime / 60,
                 expectedWaitingTime % 60
@@ -53,11 +56,19 @@ public class QueueService {
     }
 
     public void activateToken() {
+
+        RSetMultimap<String, Long> activeTokens = redissonClient.getSetMultimap("activeTokens");
+
+        //10분 후 만료 ttl 설정
+        long expiredAt = LocalDateTime.now().plusMinutes(10)
+                .atZone(ZoneId.systemDefault())
+                .toInstant()
+                .toEpochMilli();
+
         //참가열 추가 및 대기열 제거
-        getWaitingTokens().valueRange(0, entryAmount - 1).forEach(token -> {
-            redissonClient.getSetCache("activeTokens")
-                    .add(token, 10, TimeUnit.MINUTES); //10분 뒤 토큰 만료
-        });
+        getWaitingTokens().valueRange(0, entryAmount - 1)
+                .forEach(token -> activeTokens.put(token, expiredAt));
+
         getWaitingTokens().removeRangeByRank(0, entryAmount - 1);
     }
 

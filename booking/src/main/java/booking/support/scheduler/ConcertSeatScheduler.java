@@ -11,8 +11,8 @@ public class ConcertSeatScheduler {
 
     private final ConcertService concertService;
 
-    //매 1분마다 스케줄러 작동
-    @Scheduled(fixedRate = 60000)
+    //매 5분마다 스케줄러 작동
+    @Scheduled(fixedRate = 300000)
     public void expiredToken() {
         concertService.expiredToken();
     }
