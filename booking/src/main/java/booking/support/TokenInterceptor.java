@@ -26,32 +26,37 @@ public class TokenInterceptor implements HandlerInterceptor {
         //Handler 종류 확인
         if (handler instanceof ResourceHttpRequestHandler) return true;
 
-        //형 변환
-        HandlerMethod handlerMethod = (HandlerMethod) handler;
-
         //@Authorization 정보 조회
-        Authorization authorization = handlerMethod.getMethodAnnotation(Authorization.class);
+        Authorization authorization = ((HandlerMethod) handler).getMethodAnnotation(Authorization.class);
 
         //토큰 정보가 없는 경우 에러 반환
-        if (authorization == null) {
-            authorization = handlerMethod.getBeanType().getAnnotation(Authorization.class);
-        }
-
         if (authorization != null) {
             String header = request.getHeader("Authorization");
             String uri = request.getRequestURI();
 
             //헤더가 없을 시 토큰을 발급해야 한다.
-            if (header == null) {
+            if (header == null || header.isEmpty()) {
                 if (!uri.equals("/waiting/token")) {
                     log.warn("Authorization invalid header = {}", header);
                     throw new CustomBadRequestException(WAITING_TOKEN_AUTH_FAIL, "토큰 인증 실패");
                 }
             }
+
+            //헤더에서 토큰을 추출하여 요청 속성으로 저장
+            String token = extractToken(header);
+            request.setAttribute("token", token);
+
             log.info("Authorization valid header = {}", header);
         }
         //핸들러 접근 가능
         return true;
+    }
+
+    private String extractToken(String header) {
+        if (header.startsWith("Bearer ")) {
+            return header.substring(7);
+        }
+        return header;
     }
 
     @Override

@@ -1,6 +1,6 @@
 package booking.support.scheduler;
 
-import booking.api.waiting.domain.WaitingTokenService;
+import booking.api.waiting.domain.QueueService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -9,12 +9,11 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class WaitingTokenScheduler {
 
-    private final WaitingTokenService waitingTokenService;
+    private final QueueService queueService;
 
-    //매 1분마다 스케줄러 작동
-    @Scheduled(fixedRate = 60000)
-    public void checkEntryAndUpdateState() {
-        waitingTokenService.getDeactivateTokens()
-                .forEach(waitingTokenService::activateTokens);
+    //매 10초마다 토큰 활성화
+    @Scheduled(fixedRate = 10000)
+    public void activateToken() {
+        queueService.activateToken();
     }
 }

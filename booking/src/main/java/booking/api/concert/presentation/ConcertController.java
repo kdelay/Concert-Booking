@@ -8,6 +8,7 @@ import booking.api.concert.presentation.response.PayResponse;
 import booking.api.concert.presentation.response.SearchScheduleResponse;
 import booking.api.concert.presentation.response.SearchSeatsResponse;
 import booking.support.Authorization;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.websocket.server.PathParam;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -24,7 +25,7 @@ public class ConcertController {
 
     @GetMapping("/list")
     public List<Concert> getList() {
-        return concertService.getList();
+        return concertService.getConcertsWithCache();
     }
 
     @Authorization
@@ -47,15 +48,25 @@ public class ConcertController {
 
     @Authorization
     @PostMapping("/seats/booking")
-    public List<BookingSeatsResponse> bookingSeats(@RequestBody BookingSeatsRequest request) {
-        List<Reservation> reservations = concertService.bookingSeats(request.userId(), request.concertScheduleId(), request.concertDate(), request.seatNumberList());
+    public List<BookingSeatsResponse> bookingSeats(
+            HttpServletRequest request,
+            @RequestBody BookingSeatsRequest seatsRequest
+    ) {
+        String token = (String) request.getAttribute("token");
+        List<Reservation> reservations = concertService.bookingSeats(
+                seatsRequest.userId(), seatsRequest.concertScheduleId(),
+                seatsRequest.concertDate(), seatsRequest.seatNumberList(), token);
         return BookingSeatsResponse.of(reservations);
     }
 
     @Authorization
     @PostMapping("/payment")
-    public PayResponse pay(@RequestBody PayRequest request) {
-        ConcertSeat concertSeat = concertService.pay(request.concertSeatId(), request.reservationId());
+    public PayResponse pay(
+            HttpServletRequest request,
+            @RequestBody PayRequest payRequest
+    ) {
+        String token = (String) request.getAttribute("token");
+        ConcertSeat concertSeat = concertService.pay(payRequest.concertSeatId(), payRequest.reservationId(), token);
         return new PayResponse(concertSeat.getSeatNumber());
     }
 }

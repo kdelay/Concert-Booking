@@ -18,6 +18,10 @@ spring:
     url: jdbc:h2:mem:test;MODE=MySQL;NON_KEYWORDS=USER
     username: sa
     password:
+  data:
+    redis:
+      host: localhost
+      port: 6379
   sql:
     init:
       mode: always

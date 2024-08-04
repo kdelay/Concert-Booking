@@ -27,6 +27,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -243,5 +244,20 @@ public class ConcertIntegrationTest {
         assertThat(user.getAmount()).isEqualTo(BigDecimal.valueOf(4000));
         assertThat(successCount.get()).isEqualTo(1);
         assertThat(failCount.get()).isEqualTo(2);
+    }
+
+    @Test
+    @DisplayName("캐싱 테스트")
+    public void testCache() {
+        long concertId = 1L;
+
+        //첫 번째 호출: DB 조회 후 캐시 저장
+        List<ConcertSchedule> schedule1 = concertService.getSchedules(concertId);
+
+        //두 번째 호출: 캐시에서 조회
+        List<ConcertSchedule> schedule2 = concertService.getSchedules(concertId);
+
+        assertNotNull(schedule1);
+        assertNotNull(schedule2);
     }
 }

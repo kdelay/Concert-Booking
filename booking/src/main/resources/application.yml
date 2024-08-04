@@ -1,9 +1,16 @@
 spring:
+  config:
+    activate:
+      on-profile: local
   datasource:
-    url: "jdbc:mysql://localhost:3306/concert_booking?useSSL=false&serverTimezone=UTC&NON_KEYWORDS=USER"
+    url: "jdbc:mysql://localhost:3307/concert?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone&NON_KEYWORDS=USER"
     username: "root"
     password: "1234"
     driver-class-name: com.mysql.cj.jdbc.Driver
+  data:
+    redis:
+      host: localhost
+      port: 6379
   jpa:
     hibernate:
       ddl-auto: none
