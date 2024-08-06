@@ -1,7 +1,8 @@
-package booking.api.concert.infrastructure;
+package booking.api.concert.infrastructure.repository;
 
 import booking.api.concert.domain.*;
 import booking.api.concert.domain.enums.ReservationStatus;
+import booking.api.concert.infrastructure.ConcertMapper;
 import booking.support.exception.CustomNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;

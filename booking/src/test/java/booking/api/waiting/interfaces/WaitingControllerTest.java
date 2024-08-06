@@ -2,7 +2,7 @@ package booking.api.waiting.interfaces;
 
 import booking.api.waiting.domain.WaitingService;
 import booking.api.waiting.domain.WaitingToken;
-import booking.api.waiting.domain.WaitingTokenStatus;
+import booking.api.waiting.domain.enums.WaitingTokenStatus;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

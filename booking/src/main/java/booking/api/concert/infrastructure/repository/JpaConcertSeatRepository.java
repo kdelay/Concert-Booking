@@ -1,5 +1,8 @@
-package booking.api.concert.infrastructure;
+package booking.api.concert.infrastructure.repository;
 
+import booking.api.concert.infrastructure.ConcertEntity;
+import booking.api.concert.infrastructure.ConcertScheduleEntity;
+import booking.api.concert.infrastructure.ConcertSeatEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

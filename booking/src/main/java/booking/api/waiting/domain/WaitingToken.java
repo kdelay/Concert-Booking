@@ -1,5 +1,6 @@
 package booking.api.waiting.domain;
 
+import booking.api.waiting.domain.enums.WaitingTokenStatus;
 import lombok.Builder;
 import lombok.Getter;
 

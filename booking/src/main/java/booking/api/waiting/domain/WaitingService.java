@@ -1,5 +1,6 @@
 package booking.api.waiting.domain;
 
+import booking.api.waiting.domain.enums.WaitingTokenStatus;
 import booking.support.exception.CustomNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
