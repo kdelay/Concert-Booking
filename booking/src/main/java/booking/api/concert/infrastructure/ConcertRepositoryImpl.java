@@ -37,9 +37,9 @@ public class ConcertRepositoryImpl implements ConcertRepository {
 
     @Override
     public List<ConcertSchedule> findSchedulesByConcert(Concert concert) {
-        return scheduleToDomainList(
-                jpaConcertScheduleRepository.findByConcertEntity(toEntity(concert))
-        );
+        return jpaConcertScheduleRepository.findByConcertEntity(toEntity(concert)).stream()
+                .map(ConcertMapper::scheduleToDomain)
+                .toList();
     }
 
     /**

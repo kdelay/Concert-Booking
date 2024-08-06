@@ -45,7 +45,7 @@ public class ConcertSeat {
         this.seatStatus = ConcertSeatStatus.RESERVED;
     }
 
-    public void setUserId(long userId) {
+    public void setUserId(Long userId) {
         this.userId = userId;
     }
 

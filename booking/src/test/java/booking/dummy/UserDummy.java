@@ -1,6 +1,6 @@
 package booking.dummy;
 
-import booking.api.waiting.domain.User;
+import booking.api.user.domain.User;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;

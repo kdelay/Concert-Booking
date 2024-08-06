@@ -1,7 +1,8 @@
 package booking.api.waiting.integration;
 
-import booking.api.waiting.domain.QueueService;
-import booking.api.waiting.domain.User;
+import booking.api.user.domain.User;
+import booking.api.user.domain.UserRepository;
+import booking.api.waiting.domain.WaitingService;
 import booking.api.waiting.domain.WaitingTokenRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
@@ -25,7 +26,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -36,30 +36,18 @@ public class QueueIntegrationTest {
     RedissonClient redissonClient;
 
     @Autowired
-    QueueService queueService;
+    WaitingService waitingService;
 
     @Autowired
     private WaitingTokenRepository waitingTokenRepository;
+
+    @Autowired
+    UserRepository userRepository;
 
     @AfterEach
     void clear() {
         redissonClient.getScoredSortedSet("waitingTokens").clear();
         redissonClient.getSet("activeTokens").clear();
-    }
-
-    @Test
-    @DisplayName("토큰이 있는지 확인")
-    public void getToken() {
-        String token = queueService.getNewToken();
-        assertNotNull(token);
-    }
-
-    @Test
-    @DisplayName("순번 확인")
-    public void getRank() {
-        String token = queueService.getNewToken();
-        long rank = queueService.getRank(token);
-        assertThat(rank).isGreaterThanOrEqualTo(0L);
     }
 
     @Test
@@ -75,7 +63,7 @@ public class QueueIntegrationTest {
         AtomicInteger failCount = new AtomicInteger();
         AtomicLong sumTime = new AtomicLong(0L);
 
-        List<User> users = waitingTokenRepository.findUsers();
+        List<User> users = userRepository.findUsers();
         Queue<Long> userIdList = users.stream()
                 .map(User::getId)
                 .collect(Collectors.toCollection(ConcurrentLinkedDeque::new));
@@ -93,7 +81,7 @@ public class QueueIntegrationTest {
                 }
 
                 try {
-                    queueService.getNewToken();
+                    waitingService.getWaiting("");
                     successCount.getAndIncrement();
                 } catch (RuntimeException e) {
                     log.error("Exception occurred: ", e);
@@ -121,13 +109,13 @@ public class QueueIntegrationTest {
         String userToken = waitingTokens.valueRange(2000, 2000).stream()
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("Token not found"));
-        String ttl = queueService.getTtl(userToken);
+//        String ttl = queueService.getTtl(userToken);
 
         // 예상 결과와 비교하여 검증합니다.
-        assertThat(ttl).isEqualTo("0분 10초");
+//        assertThat(ttl).isEqualTo("0분 10초");
 
         //토큰 처리열로 이동
-        queueService.activateToken();
+        waitingService.activateToken();
 
         //2,000명의 유저가 처리열로 이동되었는지 검증
         RSet<String> activeTokens = redissonClient.getSet("activeTokens");

@@ -3,7 +3,6 @@ package booking.api.concert.domain;
 import booking.api.concert.domain.enums.ReservationStatus;
 import lombok.Getter;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -17,8 +16,7 @@ public class Reservation {
     private final LocalDate concertDate;
     private ReservationStatus reservationStatus;
     private LocalDateTime createdAt;
-    private final LocalDateTime modifiedAt;
-    private BigDecimal totalAmount = BigDecimal.ZERO;
+    private LocalDateTime modifiedAt;
 
     public Reservation(Long id, Long concertSeatId, Long userId, String concertName, LocalDate concertDate, ReservationStatus reservationStatus, LocalDateTime createdAt, LocalDateTime modifiedAt) {
         this.id = id;
@@ -36,10 +34,6 @@ public class Reservation {
                 ReservationStatus.RESERVING, LocalDateTime.now(), null);
     }
 
-    public void setTotalPrice(BigDecimal seatPrice) {
-        this.totalAmount = this.totalAmount.add(seatPrice);
-    }
-
     public void canceledReservation() {
         this.reservationStatus = ReservationStatus.CANCELED;
     }
@@ -50,5 +44,9 @@ public class Reservation {
 
     public void twoMinutesAgo() {
         this.createdAt = LocalDateTime.now().minusMinutes(2);
+    }
+
+    public void updateTime() {
+        this.modifiedAt = LocalDateTime.now();
     }
 }

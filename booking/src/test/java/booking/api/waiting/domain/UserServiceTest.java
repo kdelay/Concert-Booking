@@ -1,5 +1,8 @@
 package booking.api.waiting.domain;
 
+import booking.api.user.domain.User;
+import booking.api.user.domain.UserRepository;
+import booking.api.user.domain.UserService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,6 +25,9 @@ class UserServiceTest {
     @Mock
     WaitingTokenRepository waitingTokenRepository;
 
+    @Mock
+    UserRepository userRepository;
+
     @Test
     @DisplayName("충전 금액이 없는 경우")
     void amountIsZero() {
@@ -42,8 +48,8 @@ class UserServiceTest {
         BigDecimal amount = BigDecimal.valueOf(500);
         User user = User.create(userId, BigDecimal.ZERO);
 
-        when(waitingTokenRepository.findLockByUserId(userId)).thenReturn(user);
-        when(waitingTokenRepository.saveUser(user)).thenReturn(user);
+        when(userRepository.findLockByUserId(userId)).thenReturn(user);
+        when(userRepository.saveUser(user)).thenReturn(user);
 
         User chargeUser = userService.charge(userId, amount);
         assertThat(chargeUser.getAmount()).isEqualTo(BigDecimal.valueOf(500));
@@ -57,7 +63,7 @@ class UserServiceTest {
         BigDecimal amount = BigDecimal.valueOf(500);
         User user = User.create(userId, amount);
 
-        when(waitingTokenRepository.findByUserId(userId)).thenReturn(user);
+        when(userRepository.findByUserId(userId)).thenReturn(user);
 
         User selectUser = userService.searchAmount(userId);
 

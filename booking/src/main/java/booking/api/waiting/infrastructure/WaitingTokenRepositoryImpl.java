@@ -1,84 +1,109 @@
 package booking.api.waiting.infrastructure;
 
-import booking.api.waiting.domain.User;
-import booking.api.waiting.domain.WaitingToken;
 import booking.api.waiting.domain.WaitingTokenRepository;
 import booking.support.exception.CustomNotFoundException;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.connection.StringRedisConnection;
+import org.springframework.data.redis.core.RedisCallback;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.*;
 
-import static booking.api.waiting.infrastructure.WaitingTokenMapper.*;
-import static booking.support.exception.ErrorCode.USER_IS_NOT_FOUND;
+import static booking.support.exception.ErrorCode.WAITING_TOKEN_IS_NOT_FOUND;
 
 @Repository
 @RequiredArgsConstructor
 public class WaitingTokenRepositoryImpl implements WaitingTokenRepository {
 
-    private final JpaUserRepository jpaUserRepository;
-    private final JpaWaitingTokenRepository jpaWaitingTokenRepository;
+    private final static String ACTIVE_KEY_PREFIX = "ACTIVE:";
+    public static final String WAITING_KEY_PREFIX = "WAITING";
 
-    @Override
-    public User findByUserId(Long userId) {
-        return userToDomain(
-                jpaUserRepository.findById(userId)
-                        .orElseThrow(() -> new CustomNotFoundException(USER_IS_NOT_FOUND,
-                                "해당하는 유저가 없습니다. [userId : %d]".formatted(userId)))
-        );
+    private final StringRedisTemplate redisTemplate;
+    private ZSetOperations<String, String> zSetOperations;
+    private ValueOperations<String, String> valueOperations;
+
+    @PostConstruct
+    public void init() {
+        zSetOperations = redisTemplate.opsForZSet();
+        valueOperations = redisTemplate.opsForValue();
     }
 
     @Override
-    public User findLockByUserId(Long userId) {
-        return userToDomain(
-                jpaUserRepository.findLockById(userId)
-                        .orElseThrow(() -> new CustomNotFoundException(USER_IS_NOT_FOUND,
-                                "해당하는 유저가 없습니다. [userId : %d]".formatted(userId)))
-        );
+    public void activeTokens(List<String> tokens) {
+        redisTemplate.executePipelined((RedisCallback<Object>) connection -> {
+            tokens.forEach(token -> {
+                String key = ACTIVE_KEY_PREFIX + token;
+                connection.stringCommands().set(key.getBytes(), token.getBytes());
+                connection.commands().expire(key.getBytes(), 600);
+            });
+            return null;
+        });
     }
 
     @Override
-    public User saveUser(User user) {
-        return userToDomain(jpaUserRepository.save(userToEntity(user)));
+    public void setTtl(String token) {
+        String value = token.substring(7);
+        String key = ACTIVE_KEY_PREFIX + value;
+        redisTemplate.execute((RedisCallback<Void>) connection -> {
+            StringRedisConnection stringRedisConnection = (StringRedisConnection) connection;
+            stringRedisConnection.setEx(key, 300, value);
+            return null;
+        });
     }
 
     @Override
-    public List<User> findUsers() {
-        return userToDomainList(jpaUserRepository.findAll());
+    public void expireToken(String token) {
+        String key = ACTIVE_KEY_PREFIX + token.substring(7);
+        valueOperations.getAndDelete(key);
     }
 
     @Override
-    public WaitingToken save(WaitingToken waitingToken) {
-        return toDomain(
-                jpaWaitingTokenRepository.save(toEntity(waitingToken))
-        );
+    public Boolean findActiveQueue(String token) {
+        String value = valueOperations.get(ACTIVE_KEY_PREFIX + token);
+        if (value == null) throw new CustomNotFoundException(WAITING_TOKEN_IS_NOT_FOUND, "토큰이 활성 상태가 아닙니다.");
+        return !Objects.requireNonNull(value).isEmpty();
     }
 
     @Override
-    public Long findLastActivateWaitingId() {
-        return jpaWaitingTokenRepository.findLastActivateWaitingId().describeConstable().orElse(0L);
+    public Boolean findWaitingQueue(String token) {
+        Long rank = zSetOperations.rank(WAITING_KEY_PREFIX, token);
+        return rank != null;
     }
 
     @Override
-    public WaitingToken findNotExpiredToken(Long userId) {
-        WaitingTokenEntity waitingTokenEntity = jpaWaitingTokenRepository.findNotExpiredToken(userId).orElse(null);
-        if (waitingTokenEntity == null) return null;
-        return toDomain(waitingTokenEntity);
+    public boolean isExistWaiting() {
+        Long size = zSetOperations.size(WAITING_KEY_PREFIX);
+        return size != null && size > 0;
     }
 
     @Override
-    public List<WaitingToken> findDeactivateTokens() {
-        return toDomainList(jpaWaitingTokenRepository.findAll());
+    public String addWaitingQueue() {
+        String token = UUID.randomUUID().toString();
+        long score = LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+        zSetOperations.add(WAITING_KEY_PREFIX, token, score);
+        return token;
     }
 
     @Override
-    public List<WaitingToken> saveAll(List<WaitingToken> waitingTokenList) {
-        return toDomainList(jpaWaitingTokenRepository.saveAll(waitingTokenList.stream()
-                .map(WaitingTokenMapper::toEntity).toList()));
+    public Long findWaitingRank(String token) {
+        Long rank = zSetOperations.rank(WAITING_KEY_PREFIX, token);
+        if (rank == null) throw new CustomNotFoundException(WAITING_TOKEN_IS_NOT_FOUND, "이미 입장하거나 없는 토큰입니다.");
+        return rank;
     }
 
     @Override
-    public WaitingToken findWaitingByUserId(Long userId) {
-        return toDomain(jpaWaitingTokenRepository.findByUserId(userId));
+    public List<String> popWaitingList(int range) {
+        Set<ZSetOperations.TypedTuple<String>> typedTuples = zSetOperations.popMin(WAITING_KEY_PREFIX, range);
+        return Optional.ofNullable(typedTuples)
+                .map(set -> set.stream()
+                        .map(ZSetOperations.TypedTuple::getValue)
+                        .toList())
+                .orElse(null);
     }
 }

@@ -1,30 +1,25 @@
 package booking.api.waiting.domain;
 
-import org.springframework.data.repository.query.Param;
-
 import java.util.List;
 
 public interface WaitingTokenRepository {
 
-    //user
-    User findByUserId(Long userId);
+    //redis
+    String addWaitingQueue();
 
-    User findLockByUserId(Long userId);
+    Boolean findActiveQueue(String token);
 
-    User saveUser(User user);
+    Boolean findWaitingQueue(String token);
 
-    List<User> findUsers();
+    boolean isExistWaiting();
 
-    //waiting token
-    WaitingToken save(WaitingToken waitingToken);
+    Long findWaitingRank(String token);
 
-    Long findLastActivateWaitingId();
+    List<String> popWaitingList(int entryAmount);
 
-    WaitingToken findNotExpiredToken(@Param("userId") Long userId);
+    void activeTokens(List<String> tokens);
 
-    List<WaitingToken> findDeactivateTokens();
+    void setTtl(String token);
 
-    List<WaitingToken> saveAll(List<WaitingToken> waitingTokenList);
-
-    WaitingToken findWaitingByUserId(Long userId);
+    void expireToken(String token);
 }

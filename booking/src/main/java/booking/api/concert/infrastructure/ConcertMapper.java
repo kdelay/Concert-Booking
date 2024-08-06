@@ -22,12 +22,6 @@ public class ConcertMapper {
                 .build();
     }
 
-    public static List<ConcertSchedule> scheduleToDomainList(List<ConcertScheduleEntity> entities) {
-        return entities.stream()
-                .map(ConcertMapper::scheduleToDomain)
-                .collect(Collectors.toList());
-    }
-
     //concert seat
     public static ConcertSeat seatToDomain(ConcertSeatEntity entity) {
         return new ConcertSeat(entity.getId(),

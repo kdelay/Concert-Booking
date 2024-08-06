@@ -1,7 +1,6 @@
 package booking.support;
 
-import booking.api.waiting.presentation.WaitingTokenRequest;
-import booking.api.waiting.presentation.WaitingTokenResponse;
+import booking.api.waiting.interfaces.TokenResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,11 +8,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.annotation.Import;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Import(LoggingFilter.class)
@@ -27,25 +28,19 @@ class LoggingFilterTest {
     private TestRestTemplate restTemplate;
 
     @Test
-    @DisplayName("POST /waiting/token 대기열 토큰 발급 및 조회 - Filter 적용")
+    @DisplayName("POST /waiting Filter 적용")
     public void filterWaitingToken() {
 
-        WaitingTokenRequest request = new WaitingTokenRequest(1L);
+        HttpHeaders headers = new HttpHeaders();
+        HttpEntity<String> request = new HttpEntity<>(headers);
 
-        ResponseEntity<WaitingTokenResponse> responseEntity = restTemplate.postForEntity(
+        ResponseEntity<TokenResponse> responseEntity = restTemplate.postForEntity(
                 "http://localhost:" + port + "/waiting/token",
-                createHttpEntityWithToken(request, "valid-token"),
-                WaitingTokenResponse.class);
+                request,
+                TokenResponse.class);
 
         assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
-        WaitingTokenResponse responseBody = responseEntity.getBody();
+        TokenResponse responseBody = responseEntity.getBody();
         assertThat(responseBody).isNotNull();
-    }
-
-    private HttpEntity<WaitingTokenRequest> createHttpEntityWithToken(WaitingTokenRequest request, String token) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.set(AUTHORIZATION, "Bearer " + token);
-        return new HttpEntity<>(request, headers);
     }
 }

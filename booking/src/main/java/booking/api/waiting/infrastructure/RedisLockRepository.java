@@ -1,7 +1,7 @@
 package booking.api.waiting.infrastructure;
 
-import booking.support.LockHandler;
-import booking.support.TransactionHandler;
+import booking.support.handler.LockHandler;
+import booking.support.handler.TransactionHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;

@@ -3,7 +3,8 @@ package booking.api.concert.domain;
 import booking.api.concert.domain.enums.ConcertSeatStatus;
 import booking.api.concert.domain.enums.PaymentState;
 import booking.api.concert.domain.enums.ReservationStatus;
-import booking.api.waiting.domain.User;
+import booking.api.user.domain.User;
+import booking.api.user.domain.UserRepository;
 import booking.api.waiting.domain.WaitingTokenRepository;
 import booking.dummy.ConcertSeatDummy;
 import booking.support.exception.CustomBadRequestException;
@@ -42,6 +43,9 @@ class ConcertServiceTest {
 
     @Mock
     WaitingTokenRepository waitingTokenRepository;
+
+    @Mock
+    UserRepository userRepository;
 
     private Concert concert;
     private List<ConcertSchedule> concertScheduleList;
@@ -84,12 +88,12 @@ class ConcertServiceTest {
 
     @Test
     @DisplayName("예약 가능한 콘서트 날짜 및 PK 조회")
-    void getSchedules() {
+    void getSchedulesWithCache() {
 
         //콘서트 날짜 정보 조회
         when(concertRepository.findSchedulesByConcert(concert)).thenReturn(concertScheduleList);
 
-        List<ConcertSchedule> concertSchedules = concertService.getSchedules(concert.getId());
+        List<ConcertSchedule> concertSchedules = concertService.getSchedulesWithCache(concert.getId());
         List<LocalDate> dates = concertService.getConcertScheduleDates(concertSchedules);
         List<Long> idList = concertService.getConcertScheduleIds(concertSchedules);
 
@@ -177,7 +181,7 @@ class ConcertServiceTest {
                     .thenReturn(concertSeat);
         });
 
-        assertThatThrownBy(() -> concertService.bookingSeats(1L, 1L, LocalDate.now(), seatNumberList))
+        assertThatThrownBy(() -> concertService.bookingSeats(1L, 1L, LocalDate.now(), seatNumberList, ""))
                 .isInstanceOf(CustomBadRequestException.class)
                 .hasMessage("[CONCERT_SEAT_IS_NOT_AVAILABLE] 이미 예약되거나 임시 배정 중인 좌석입니다.");
     }
@@ -207,11 +211,11 @@ class ConcertServiceTest {
         //예약 정보
         concertSeats.forEach(concertSeat -> {
             Reservation reservation = Reservation.create(concertSeat.getId(), 1L, concert.getName(), concertSchedule.getConcertDate());
-            reservation.setTotalPrice(concertSeat.getSeatPrice());
+            reservation.setSeatPrice(concertSeat.getSeatPrice());
             when(concertRepository.saveReservation(any(Reservation.class))).thenReturn(reservation);
         });
 
-        List<Reservation> reservations = concertService.bookingSeats(1L, 1L, LocalDate.now(), seatNumberList);
+        List<Reservation> reservations = concertService.bookingSeats(1L, 1L, LocalDate.now(), seatNumberList, "");
 
         assertEquals(2, reservations.size());
         assertThat(reservations).extracting(Reservation::getConcertSeatId).containsExactlyInAnyOrder(2L, 4L);
@@ -279,7 +283,7 @@ class ConcertServiceTest {
 
         //유저 잔액 조회
         User user = User.create(userId, BigDecimal.valueOf(5000));
-        when(waitingTokenRepository.findLockByUserId(anyLong())).thenReturn(user);
+        when(userRepository.findLockByUserId(anyLong())).thenReturn(user);
 
         //결제 정보 조회
         Payment payment = new Payment(1L, reservation.getId(), seatPrice, PaymentState.PENDING, LocalDateTime.now(), null);
@@ -290,10 +294,10 @@ class ConcertServiceTest {
                 BigDecimal.valueOf(100), ConcertSeatStatus.AVAILABLE, LocalDateTime.now(), null);
         when(concertRepository.findBySeatId(anyLong())).thenReturn(concertSeat);
 
-        ConcertSeat result = concertService.pay(concertSeatId, reservationId);
+        ConcertSeat result = concertService.pay(concertSeatId, reservationId, "");
 
         //유저 잔액 차감 검증
-        BigDecimal expectedAmount = waitingTokenRepository.findLockByUserId(user.getId()).getAmount();
+        BigDecimal expectedAmount = userRepository.findLockByUserId(user.getId()).getAmount();
         assertThat(expectedAmount).isEqualTo(BigDecimal.valueOf(5000).subtract(seatPrice));
 
         //결제 상태 COMPLETED 검증
@@ -320,13 +324,13 @@ class ConcertServiceTest {
 
         //유저 잔액 조회
         User user = User.create(userId, BigDecimal.valueOf(500));
-        when(waitingTokenRepository.findLockByUserId(anyLong())).thenReturn(user);
+        when(userRepository.findLockByUserId(anyLong())).thenReturn(user);
 
         //결제 정보 조회
         Payment payment = new Payment(1L, reservation.getId(), seatPrice, PaymentState.PENDING, LocalDateTime.now(), null);
         when(concertRepository.findPaymentByReservation(reservation.getId())).thenReturn(payment);
 
-        assertThatThrownBy(() -> concertService.pay(concertSeatId, reservationId))
+        assertThatThrownBy(() -> concertService.pay(concertSeatId, reservationId, ""))
                 .isInstanceOf(CustomBadRequestException.class)
                 .hasMessage("[USER_AMOUNT_IS_NOT_ENOUGH] 잔액이 부족합니다.");
     }

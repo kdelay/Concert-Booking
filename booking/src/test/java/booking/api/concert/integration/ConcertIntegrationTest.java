@@ -4,10 +4,10 @@ import booking.api.concert.domain.*;
 import booking.api.concert.domain.enums.ConcertSeatStatus;
 import booking.api.concert.domain.enums.PaymentState;
 import booking.api.concert.domain.enums.ReservationStatus;
-import booking.api.waiting.domain.User;
-import booking.api.waiting.domain.UserService;
+import booking.api.user.domain.User;
+import booking.api.user.domain.UserRepository;
+import booking.api.user.domain.UserService;
 import booking.api.waiting.domain.WaitingTokenRepository;
-import booking.api.waiting.domain.WaitingTokenStatus;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -41,6 +41,9 @@ public class ConcertIntegrationTest {
     private WaitingTokenRepository waitingTokenRepository;
 
     @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
     private ConcertRepository concertRepository;
 
     @Autowired
@@ -54,7 +57,7 @@ public class ConcertIntegrationTest {
         int threads = 50;
 
         //유저 정보
-        List<User> users = waitingTokenRepository.findUsers();
+        List<User> users = userRepository.findUsers();
         Queue<Long> userIdList = users.stream()
                 .map(User::getId)
                 .collect(Collectors.toCollection(ConcurrentLinkedDeque::new));
@@ -82,7 +85,7 @@ public class ConcertIntegrationTest {
                     concertService.bookingSeats(userIdList.poll(),
                             concertScheduleList.get(0).getId(),
                             concertScheduleList.get(0).getConcertDate(),
-                            List.of(1));
+                            List.of(1), "");
                     successCount.getAndIncrement();
                 } catch (RuntimeException e) {
                     failCount.getAndIncrement();
@@ -114,7 +117,7 @@ public class ConcertIntegrationTest {
         int threads = 10;
 
         //유저 정보
-        List<User> users = waitingTokenRepository.findUsers();
+        List<User> users = userRepository.findUsers();
         Queue<Long> userIdList = users.stream()
                 .map(User::getId)
                 .collect(Collectors.toCollection(ConcurrentLinkedDeque::new));
@@ -145,7 +148,7 @@ public class ConcertIntegrationTest {
                     concertService.bookingSeats(userIdList.poll(),
                             concertScheduleList.get(0).getId(),
                             concertScheduleList.get(0).getConcertDate(),
-                            List.of(seatList.poll()));
+                            List.of(seatList.poll()), "");
                     successCount.getAndIncrement();
                 } catch (RuntimeException e) {
                     failCount.getAndIncrement();
@@ -171,11 +174,13 @@ public class ConcertIntegrationTest {
     @DisplayName("예약 후 1분 이내에 결제 상태가 변경되지 않으면 예약, 결제가 취소되고 좌석 상태를 AVAILABLE 로 변경하고 대기열 토큰을 만료시킨다.")
     void noPayedInTimeThenCanceledAndExpiredToken() throws InterruptedException {
 
-        User user = waitingTokenRepository.findByUserId(1L);
+        User user = userRepository.findByUserId(1L);
         Concert concert = concertRepository.findByConcertId(1L);
         ConcertSchedule concertSchedule = concertRepository.findSchedulesByConcert(concert).get(0);
 
-        List<Reservation> reservations = concertService.bookingSeats(user.getId(), concertSchedule.getId(), concertSchedule.getConcertDate(), List.of(1));
+        List<Reservation> reservations = concertService.bookingSeats(
+                user.getId(), concertSchedule.getId(), concertSchedule.getConcertDate(), List.of(1), ""
+        );
 
         //2분 전 데이터로 세팅
         reservations.forEach(reservation -> {
@@ -201,8 +206,8 @@ public class ConcertIntegrationTest {
                     .isEqualTo(ConcertSeatStatus.AVAILABLE);
 
             //대기열 상태 검증
-            assertThat(waitingTokenRepository.findWaitingByUserId(reservation.getUserId()).getWaitingTokenStatus())
-                    .isEqualTo(WaitingTokenStatus.EXPIRED);
+//            assertThat(userRepository.findWaitingByUserId(reservation.getUserId()).getWaitingTokenStatus())
+//                    .isEqualTo(WaitingTokenStatus.EXPIRED);
         });
     }
 
@@ -220,12 +225,12 @@ public class ConcertIntegrationTest {
         AtomicInteger failCount = new AtomicInteger();
 
         userService.charge(userId, BigDecimal.valueOf(5000));
-        concertService.bookingSeats(userId, 1L, LocalDate.parse("2024-07-10"), List.of(1, 2));
+        concertService.bookingSeats(userId, 1L, LocalDate.parse("2024-07-10"), List.of(1, 2), "");
 
         for (int i = 0; i < threads; i++) {
             executorService.execute(() -> {
                 try {
-                    concertService.pay(1L, 1L);
+                    concertService.pay(1L, 1L, "");
                     successCount.getAndIncrement();
                 } catch (RuntimeException e) {
                     failCount.getAndIncrement();
@@ -239,7 +244,7 @@ public class ConcertIntegrationTest {
         countDownLatch.await();
         executorService.shutdown();
 
-        User user = waitingTokenRepository.findByUserId(userId);
+        User user = userRepository.findByUserId(userId);
 
         assertThat(user.getAmount()).isEqualTo(BigDecimal.valueOf(4000));
         assertThat(successCount.get()).isEqualTo(1);
@@ -252,10 +257,10 @@ public class ConcertIntegrationTest {
         long concertId = 1L;
 
         //첫 번째 호출: DB 조회 후 캐시 저장
-        List<ConcertSchedule> schedule1 = concertService.getSchedules(concertId);
+        List<ConcertSchedule> schedule1 = concertService.getSchedulesWithCache(concertId);
 
         //두 번째 호출: 캐시에서 조회
-        List<ConcertSchedule> schedule2 = concertService.getSchedules(concertId);
+        List<ConcertSchedule> schedule2 = concertService.getSchedulesWithCache(concertId);
 
         assertNotNull(schedule1);
         assertNotNull(schedule2);

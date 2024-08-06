@@ -1,11 +1,12 @@
 package booking.api.concert.domain;
 
-import booking.api.waiting.domain.User;
+import booking.api.user.domain.User;
+import booking.api.user.domain.UserRepository;
 import booking.api.waiting.domain.WaitingTokenRepository;
 import booking.support.exception.CustomBadRequestException;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
-import org.redisson.api.RSetMultimap;
-import org.redisson.api.RedissonClient;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,10 +15,9 @@ import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static booking.api.concert.domain.enums.ConcertSeatStatus.AVAILABLE;
@@ -30,8 +30,11 @@ import static booking.support.exception.ErrorCode.*;
 public class ConcertService {
 
     private final ConcertRepository concertRepository;
+    private final UserRepository userRepository;
     private final WaitingTokenRepository waitingTokenRepository;
-    private final RedissonClient redissonClient;
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     /**
      * 콘서트 목록 조회
@@ -47,8 +50,7 @@ public class ConcertService {
      * @return 콘서트 날짜 정보
      */
     @Cacheable(cacheNames = "concertSchedules", key = "#concertId", cacheManager = "redisCacheManager")
-    public List<ConcertSchedule> getSchedules(Long concertId) {
-
+    public List<ConcertSchedule> getSchedulesWithCache(Long concertId) {
         //콘서트 정보 조회
         Concert concert = concertRepository.findByConcertId(concertId);
 
@@ -128,23 +130,31 @@ public class ConcertService {
         //예약 정보 저장
         List<Reservation> reservations = getReservations(userId, concertDate, seatNumberList, concert, concertSchedule);
 
-        //결제 정보 저장
-        reservations.forEach(reservation ->
-                concertRepository.savePayment(Payment.create(reservation.getId(), reservation.getTotalAmount())));
+        //좌석 정보 조회 및 가격 정보 세팅
+        List<ConcertSeat> concertSeats = getConcertSeats(userId, seatNumberList, concert, concertSchedule);
+        Map<Long, BigDecimal> seatPriceMap = concertSeats.stream()
+                .collect(Collectors.toMap(ConcertSeat::getId, ConcertSeat::getSeatPrice));
 
-        RSetMultimap<String, Long> activeTokens = redissonClient.getSetMultimap("activeTokens");
+        //결제 정보 저장
+        reservations.forEach(reservation -> {
+            BigDecimal seatPrice = seatPriceMap.get(reservation.getConcertSeatId());
+            concertRepository.savePayment(Payment.create(reservation.getId(), seatPrice));
+        });
 
         //5분 후 만료 ttl 설정
-        long expiredAt = LocalDateTime.now().plusMinutes(5)
-                .atZone(ZoneId.systemDefault())
-                .toInstant()
-                .toEpochMilli();
-
-        activeTokens.get(token).forEach(t -> activeTokens.put(token, expiredAt));
-
+        waitingTokenRepository.setTtl(token);
         return reservations;
     }
 
+    /**
+     * 예약 정보 생성
+     * @param userId 유저 PK
+     * @param concertDate 콘서트 날짜
+     * @param seatNumberList 콘서트 좌석 번호 목록
+     * @param concert 콘서트 정보
+     * @param concertSchedule 콘서트 날짜 정보
+     * @return 예약 정보
+     */
     private List<Reservation> getReservations(long userId, LocalDate concertDate, List<Integer> seatNumberList, Concert concert, ConcertSchedule concertSchedule) {
 
         //예약하고자 하는 좌석 리스트
@@ -152,21 +162,27 @@ public class ConcertService {
 
         return concertSeats.stream()
                 .map(seat -> {
-                    BigDecimal price = seat.getSeatPrice();
-
                     //예약 정보 생성
                     Reservation reservation = Reservation.create(seat.getId(), userId, concert.getName(), concertDate);
-                    reservation.setTotalPrice(price);
                     return concertRepository.saveReservation(reservation);
                 })
                 .toList();
     }
 
+    /**
+     * 콘서트 좌석 정보 저장
+     * @param userId 유저 PK
+     * @param seatNumberList 콘서트 좌석 번호 목록
+     * @param concert 콘서트 정보
+     * @param concertSchedule 콘서트 날짜 정보
+     * @return 콘서트 좌석 정보
+     */
     private List<ConcertSeat> getConcertSeats(long userId, List<Integer> seatNumberList, Concert concert, ConcertSchedule concertSchedule) {
+        entityManager.clear();
+        return seatNumberList.stream()
+                .map(seatNumber -> {
+                    ConcertSeat seat = concertRepository.findSeatsBySeatNumber(concert.getId(), concertSchedule.getId(), seatNumber);
 
-        List<ConcertSeat> concertSeats = seatNumberList.stream()
-                .map(seatNumber -> concertRepository.findSeatsBySeatNumber(concert.getId(), concertSchedule.getId(), seatNumber))
-                .peek(seat -> {
                     //예약 가능한 좌석 상태인지 검증
                     if (seat.getSeatStatus() != AVAILABLE) {
                         throw new CustomBadRequestException(CONCERT_SEAT_IS_NOT_AVAILABLE, "이미 예약되거나 임시 배정 중인 좌석입니다.");
@@ -175,11 +191,10 @@ public class ConcertService {
                     seat.temporarySeat();
                     seat.setUserId(userId);
                     seat.updateTime();
+
+                    return concertRepository.saveConcertSeat(seat);
                 })
                 .toList();
-
-        //좌석 정보 저장
-        return concertRepository.saveAllSeats(concertSeats);
     }
 
     /**
@@ -200,16 +215,6 @@ public class ConcertService {
             //결제 상태가 완료 상태가 아닌 경우
             if (paymentByReservation.getPaymentState() != COMPLETED) {
 
-                long curTime = LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
-
-                RSetMultimap<String, Long> activeTokens = redissonClient.getSetMultimap("activeTokens");
-
-                //activeToken 에서 value 값이 curTime 보다 크거나 같은 데이터를 가져온다.
-                Set<String> filteredKeys = activeTokens.readAllKeySet().stream()
-                        .filter(key -> activeTokens.get(key).stream()
-                                .anyMatch(value -> value >= curTime))
-                        .collect(Collectors.toSet());
-
                 //예약 생성 시간
                 LocalDateTime createdAt = reservation.getCreatedAt();
 
@@ -220,20 +225,21 @@ public class ConcertService {
                 if (duration.toSeconds() > 300) {
                     //예약 취소
                     reservation.canceledReservation();
+                    reservation.updateTime();
                     concertRepository.saveReservation(reservation);
 
                     //결제 취소
                     Payment payment = concertRepository.findPaymentByReservation(reservation.getId());
                     payment.canceledPayment();
+                    payment.updateTime();
                     concertRepository.savePayment(payment);
 
                     //좌석 임시 배정 취소 -> 예약 가능 상태로 변경
                     ConcertSeat concertSeat = concertRepository.findBySeatId(reservation.getConcertSeatId());
                     concertSeat.availableSeat();
+                    concertSeat.updateTime();
+                    concertSeat.setUserId(null);
                     concertRepository.saveConcertSeat(concertSeat);
-
-                    //대기열 토큰 만료
-                    filteredKeys.forEach(activeTokens::removeAll);
                 }
             }
         });
@@ -253,7 +259,7 @@ public class ConcertService {
 
         //유저 잔액 확인 및 결제 처리
         Long userId = reservation.getUserId();
-        User user = waitingTokenRepository.findLockByUserId(userId);
+        User user = userRepository.findLockByUserId(userId);
         Payment payment = concertRepository.findPaymentByReservation(reservation.getId());
 
         BigDecimal totalAmount = payment.getPrice();
@@ -265,23 +271,26 @@ public class ConcertService {
 
         //유저 잔액에서 결제 금액 차감
         user.useAmount(totalAmount);
-        waitingTokenRepository.saveUser(user);
+        userRepository.saveUser(user);
 
         //Payment 상태 변경
         payment.completedPayment();
+        payment.updateTime();
         concertRepository.savePayment(payment);
 
         //ConcertSeat 상태 변경
         ConcertSeat concertSeat = concertRepository.findBySeatId(concertSeatId);
         concertSeat.reservedSeat();
+        concertSeat.updateTime();
         concertRepository.saveConcertSeat(concertSeat);
 
         //Reservation 상태 변경
         reservation.reservedReservation();
+        reservation.updateTime();
         concertRepository.saveReservation(reservation);
 
         //token 만료
-        redissonClient.getSetMultimap("activeTokens").removeAll(token);
+        waitingTokenRepository.expireToken(token);
 
         return concertSeat;
     }

@@ -36,4 +36,8 @@ public class Payment {
     public void completedPayment() {
         this.paymentState = PaymentState.COMPLETED;
     }
+
+    public void updateTime() {
+        this.modifiedAt = LocalDateTime.now();
+    }
 }

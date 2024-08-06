@@ -3,7 +3,7 @@ package booking.api.concert.domain;
 import booking.api.concert.domain.enums.ConcertSeatStatus;
 import booking.api.concert.domain.enums.PaymentState;
 import booking.api.concert.domain.enums.ReservationStatus;
-import booking.api.waiting.domain.User;
+import booking.api.user.domain.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -82,8 +82,8 @@ public class ConcertDomainTest {
     @Test
     @DisplayName("예약 총 금액")
     void setTotalPrice() {
-        reservation.setTotalPrice(BigDecimal.valueOf(2000));
-        assertThat(reservation.getTotalAmount().compareTo(BigDecimal.valueOf(2000))).isEqualTo(0);
+        reservation.setSeatPrice(BigDecimal.valueOf(2000));
+        assertThat(reservation.getSeatPrice().compareTo(BigDecimal.valueOf(2000))).isEqualTo(0);
     }
 
     @Test
