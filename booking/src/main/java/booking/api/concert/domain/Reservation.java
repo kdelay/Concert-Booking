@@ -42,8 +42,8 @@ public class Reservation {
         this.reservationStatus = ReservationStatus.RESERVED;
     }
 
-    public void twoMinutesAgo() {
-        this.createdAt = LocalDateTime.now().minusMinutes(2);
+    public void fiveMinuteAgo() {
+        this.createdAt = LocalDateTime.now().minusMinutes(6);
     }
 
     public void updateTime() {

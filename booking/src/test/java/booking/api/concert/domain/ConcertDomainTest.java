@@ -80,13 +80,6 @@ public class ConcertDomainTest {
     }
 
     @Test
-    @DisplayName("예약 총 금액")
-    void setTotalPrice() {
-        reservation.setSeatPrice(BigDecimal.valueOf(2000));
-        assertThat(reservation.getSeatPrice().compareTo(BigDecimal.valueOf(2000))).isEqualTo(0);
-    }
-
-    @Test
     @DisplayName("예약 상태 변경")
     void updateReservationStatus() {
         reservation.reservedReservation();

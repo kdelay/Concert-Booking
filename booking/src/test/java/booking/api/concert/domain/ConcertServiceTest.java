@@ -211,7 +211,6 @@ class ConcertServiceTest {
         //예약 정보
         concertSeats.forEach(concertSeat -> {
             Reservation reservation = Reservation.create(concertSeat.getId(), 1L, concert.getName(), concertSchedule.getConcertDate());
-            reservation.setSeatPrice(concertSeat.getSeatPrice());
             when(concertRepository.saveReservation(any(Reservation.class))).thenReturn(reservation);
         });
 
