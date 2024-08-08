@@ -40,7 +40,6 @@ public class ConcertService {
      * 콘서트 목록 조회
      * @return 콘서트 목록
      */
-    @Cacheable(cacheNames = "concerts", cacheManager = "redisCacheManager")
     public List<Concert> getConcertsWithCache() {
         return concertRepository.findAllConcerts();
     }
@@ -49,7 +48,6 @@ public class ConcertService {
      * @param concertId 콘서트 PK
      * @return 콘서트 날짜 정보
      */
-    @Cacheable(cacheNames = "concertSchedules", key = "#concertId", cacheManager = "redisCacheManager")
     public List<ConcertSchedule> getSchedulesWithCache(Long concertId) {
         //콘서트 정보 조회
         Concert concert = concertRepository.findByConcertId(concertId);

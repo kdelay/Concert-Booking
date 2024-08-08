@@ -14,7 +14,9 @@ import java.util.Objects;
 
 @Entity @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "concert_seat")
+@Table(name = "concert_seat", indexes = {
+        @Index(name = "idx_unique", columnList = "concert_id, concert_schedule_id, seat_number")
+})
 public class ConcertSeatEntity {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
