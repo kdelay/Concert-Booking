@@ -1,3 +1,7 @@
+-- 숫자 시퀀스를 생성하는 임시 테이블
+DROP TABLE IF EXISTS number_sequence;
+CREATE TABLE IF NOT EXISTS number_sequence (seq INT);
+
 -- 유저
 DROP TABLE IF EXISTS user;
 CREATE TABLE IF NOT EXISTS user (
@@ -6,26 +10,12 @@ CREATE TABLE IF NOT EXISTS user (
   PRIMARY KEY (id)
 ) ENGINE=InnoDB;
 
--- 대기열
-DROP TABLE IF EXISTS waiting_token;
-CREATE TABLE IF NOT EXISTS waiting_token (
-    id BIGINT NOT NULL AUTO_INCREMENT COMMENT '대기열 PK',
-    version BIGINT DEFAULT 0 COMMENT '버전',
-    user_id BIGINT COMMENT '유저 PK',
-    token VARCHAR(255) NOT NULL COMMENT '토큰 정보(uuid)',
-    waiting_token_status ENUM('ACTIVATE','DEACTIVATE','EXPIRED') COMMENT '대기열 토큰 상태',
-    created_at DATETIME(6) COMMENT '대기열 토큰 요청 시간',
-    modified_at DATETIME(6) COMMENT '상태 변경 시간',
-    PRIMARY KEY (id),
-    UNIQUE (token)
-) ENGINE=InnoDB;
-
 -- 콘서트
 DROP TABLE IF EXISTS concert;
 CREATE TABLE IF NOT EXISTS concert (
     id BIGINT NOT NULL AUTO_INCREMENT COMMENT '콘서트 PK',
     name VARCHAR(20) NOT NULL COMMENT '콘서트 이름',
-    host VARCHAR(10) NOT NULL COMMENT '콘서트 주최자',
+    host VARCHAR(20) NOT NULL COMMENT '콘서트 주최자',
     PRIMARY KEY (id)
 ) ENGINE=InnoDB;
 
