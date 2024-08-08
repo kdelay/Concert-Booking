@@ -12,7 +12,9 @@ import java.util.Objects;
 
 @Entity @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "concert_schedule")
+@Table(name = "concert_schedule", indexes = {
+        @Index(name = "idx_unique", columnList = "concert_date, concert_id")
+})
 public class ConcertScheduleEntity {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
