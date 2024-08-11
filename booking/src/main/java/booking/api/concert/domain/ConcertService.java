@@ -1,5 +1,7 @@
 package booking.api.concert.domain;
 
+import booking.api.concert.domain.event.PaymentEventPublisher;
+import booking.api.concert.domain.event.PaymentSuccessEvent;
 import booking.api.user.domain.User;
 import booking.api.user.domain.UserRepository;
 import booking.api.waiting.domain.WaitingTokenRepository;
@@ -7,7 +9,6 @@ import booking.support.exception.CustomBadRequestException;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,6 +33,7 @@ public class ConcertService {
     private final ConcertRepository concertRepository;
     private final UserRepository userRepository;
     private final WaitingTokenRepository waitingTokenRepository;
+    private final PaymentEventPublisher eventPublisher;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -40,7 +42,6 @@ public class ConcertService {
      * 콘서트 목록 조회
      * @return 콘서트 목록
      */
-    @Cacheable(cacheNames = "concerts", cacheManager = "redisCacheManager")
     public List<Concert> getConcertsWithCache() {
         return concertRepository.findAllConcerts();
     }
@@ -49,7 +50,6 @@ public class ConcertService {
      * @param concertId 콘서트 PK
      * @return 콘서트 날짜 정보
      */
-    @Cacheable(cacheNames = "concertSchedules", key = "#concertId", cacheManager = "redisCacheManager")
     public List<ConcertSchedule> getSchedulesWithCache(Long concertId) {
         //콘서트 정보 조회
         Concert concert = concertRepository.findByConcertId(concertId);
@@ -289,8 +289,8 @@ public class ConcertService {
         reservation.updateTime();
         concertRepository.saveReservation(reservation);
 
-        //token 만료
-        waitingTokenRepository.expireToken(token);
+        //결제 완료 이벤트 발행
+        eventPublisher.success(new PaymentSuccessEvent(reservation, payment, token));
 
         return concertSeat;
     }
