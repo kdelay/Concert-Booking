@@ -1,4 +1,4 @@
-package booking.api.concert.interfaces.event;
+package booking.api.concert.application.event;
 
 import booking.api.concert.domain.event.DataPlatformSendService;
 import booking.api.concert.domain.event.PaymentSuccessEvent;
@@ -17,7 +17,7 @@ public class PaymentEventListener {
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void paymentSuccessHandler(PaymentSuccessEvent event) {
-        //결제 정보 전달
-        sendService.sendPaymentSuccess(event);
+        sendService.expireToken(event.getToken());
+        sendService.sendSlack(event.getReservation(), event.getPayment());
     }
 }
