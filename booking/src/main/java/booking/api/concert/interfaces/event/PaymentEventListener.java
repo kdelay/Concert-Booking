@@ -1,6 +1,6 @@
-package booking.api.concert.application.event;
+package booking.api.concert.interfaces.event;
 
-import booking.api.concert.domain.event.DataPlatformSendService;
+import booking.api.concert.application.DataPlatformSendService;
 import booking.api.concert.domain.event.PaymentSuccessEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Async;
@@ -16,8 +16,13 @@ public class PaymentEventListener {
 
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void paymentSuccessHandler(PaymentSuccessEvent event) {
+    public void expireToken(PaymentSuccessEvent event) {
         sendService.expireToken(event.getToken());
+    }
+
+    @Async
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void sendSlack(PaymentSuccessEvent event) {
         sendService.sendSlack(event.getReservation(), event.getPayment());
     }
 }

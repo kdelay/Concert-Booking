@@ -1,4 +1,4 @@
-package booking.api.concert.domain.event;
+package booking.api.concert.application;
 
 import booking.api.concert.domain.MockApiClient;
 import booking.api.concert.domain.Payment;
