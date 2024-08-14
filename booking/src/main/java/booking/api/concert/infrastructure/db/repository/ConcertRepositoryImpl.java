@@ -1,4 +1,4 @@
-package booking.api.concert.infrastructure.repository;
+package booking.api.concert.infrastructure.db.repository;
 
 import booking.api.concert.domain.*;
 import booking.api.concert.domain.enums.ReservationStatus;

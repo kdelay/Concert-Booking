@@ -1,4 +1,4 @@
-package booking.api.concert.infrastructure;
+package booking.api.concert.infrastructure.db;
 
 import booking.api.concert.domain.enums.ConcertSeatStatus;
 import jakarta.persistence.*;

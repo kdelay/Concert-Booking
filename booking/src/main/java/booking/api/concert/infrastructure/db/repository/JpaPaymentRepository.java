@@ -1,6 +1,6 @@
-package booking.api.concert.infrastructure.repository;
+package booking.api.concert.infrastructure.db.repository;
 
-import booking.api.concert.infrastructure.PaymentEntity;
+import booking.api.concert.infrastructure.db.PaymentEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface JpaPaymentRepository extends JpaRepository<PaymentEntity, Long> {

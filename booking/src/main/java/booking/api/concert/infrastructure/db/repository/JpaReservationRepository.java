@@ -1,7 +1,7 @@
-package booking.api.concert.infrastructure.repository;
+package booking.api.concert.infrastructure.db.repository;
 
 import booking.api.concert.domain.enums.ReservationStatus;
-import booking.api.concert.infrastructure.ReservationEntity;
+import booking.api.concert.infrastructure.db.ReservationEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

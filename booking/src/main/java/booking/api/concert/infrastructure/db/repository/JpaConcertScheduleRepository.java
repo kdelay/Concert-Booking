@@ -1,7 +1,7 @@
-package booking.api.concert.infrastructure.repository;
+package booking.api.concert.infrastructure.db.repository;
 
-import booking.api.concert.infrastructure.ConcertEntity;
-import booking.api.concert.infrastructure.ConcertScheduleEntity;
+import booking.api.concert.infrastructure.db.ConcertEntity;
+import booking.api.concert.infrastructure.db.ConcertScheduleEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDate;

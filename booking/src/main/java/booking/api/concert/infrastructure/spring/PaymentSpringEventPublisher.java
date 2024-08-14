@@ -1,4 +1,4 @@
-package booking.api.concert.infrastructure.event;
+package booking.api.concert.infrastructure.spring;
 
 import booking.api.concert.domain.event.PaymentEventPublisher;
 import booking.api.concert.domain.event.PaymentSuccessEvent;
@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class PaymentEventPublisherImpl implements PaymentEventPublisher {
+public class PaymentSpringEventPublisher implements PaymentEventPublisher {
 
     private final ApplicationEventPublisher applicationEventPublisher;
 

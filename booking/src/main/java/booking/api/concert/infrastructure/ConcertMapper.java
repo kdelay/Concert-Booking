@@ -1,6 +1,7 @@
 package booking.api.concert.infrastructure;
 
 import booking.api.concert.domain.*;
+import booking.api.concert.infrastructure.db.*;
 
 import java.util.List;
 import java.util.stream.Collectors;
