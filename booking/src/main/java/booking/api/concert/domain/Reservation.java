@@ -2,18 +2,20 @@ package booking.api.concert.domain;
 
 import booking.api.concert.domain.enums.ReservationStatus;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Getter
+@NoArgsConstructor
 public class Reservation {
 
-    private final Long id;
-    private final Long concertSeatId;
-    private final Long userId;
-    private final String concertName;
-    private final LocalDate concertDate;
+    private Long id;
+    private Long concertSeatId;
+    private Long userId;
+    private String concertName;
+    private LocalDate concertDate;
     private ReservationStatus reservationStatus;
     private LocalDateTime createdAt;
     private LocalDateTime modifiedAt;

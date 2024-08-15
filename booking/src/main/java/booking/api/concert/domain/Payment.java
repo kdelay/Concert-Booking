@@ -2,15 +2,17 @@ package booking.api.concert.domain;
 
 import booking.api.concert.domain.enums.PaymentState;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Getter
+@NoArgsConstructor
 public class Payment {
 
-    private final Long id;
-    private final Long reservationId;
+    private Long id;
+    private Long reservationId;
     private BigDecimal price;
     private PaymentState paymentState;
     private LocalDateTime createdAt;
