@@ -7,9 +7,12 @@ import lombok.Getter;
 @Getter
 public class PaymentSuccessEvent {
 
-    private final Reservation reservation;
-    private final Payment payment;
-    private final String token;
+    private Reservation reservation;
+    private Payment payment;
+    private String token;
+
+    public PaymentSuccessEvent() {
+    }
 
     public PaymentSuccessEvent(Reservation reservation, Payment payment, String token) {
         this.reservation = reservation;

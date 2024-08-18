@@ -27,4 +27,22 @@ spring:
     init:
       mode: always
       schema-locations: classpath:/db/schema.sql
-      data-locations: classpath:/db/data.sql
+      data-locations: classpath:/db/testData.sql
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: ${spring.application.name}
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+  async:
+    execution:
+      pool:
+        core-size: 5
+        max-size: 10
+        queue-capacity: 25
+payment:
+  topic-name: "payment-success"

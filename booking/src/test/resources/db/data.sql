@@ -53,3 +53,11 @@ FROM
         FROM number_sequence
         LIMIT 50
     ) sr;
+
+-- 예약 데이터 삽입
+INSERT INTO reservation (concert_seat_id, user_id, concert_name, concert_date, reservation_status, created_at, modified_at)
+values (1, 1, 'Concert 1', '2024-08-07', 'RESERVING', now(), null);
+
+-- 결제 데이터 삽입
+INSERT INTO payment (reservation_id, price, payment_state, created_at, modified_at)
+values (1, 1000, 'PENDING', now(), null);
