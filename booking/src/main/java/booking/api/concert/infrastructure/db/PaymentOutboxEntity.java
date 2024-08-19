@@ -17,11 +17,8 @@ import java.util.Objects;
 @Table(name = "payment_outbox")
 public class PaymentOutboxEntity {
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Comment("식별자 PK")
-    private Long id;
-
-    @Comment("UUID")
+    @Id
+    @Comment("식별자 PK UUID")
     private String uuid;
 
     @Comment("메시지")
@@ -45,10 +42,9 @@ public class PaymentOutboxEntity {
 
     @Builder
     public PaymentOutboxEntity(
-            Long id, String uuid, String payload, PaymentOutboxState paymentOutboxState,
+            String uuid, String payload, PaymentOutboxState paymentOutboxState,
             LocalDateTime createdAt, LocalDateTime modifiedAt
     ) {
-        this.id = id;
         this.uuid = uuid;
         this.payload = payload;
         this.paymentOutboxState = paymentOutboxState;
@@ -71,7 +67,6 @@ public class PaymentOutboxEntity {
 
     public static PaymentOutboxEntity of(PaymentOutbox paymentOutbox) {
         return PaymentOutboxEntity.builder()
-                .id(paymentOutbox.getId())
                 .uuid(paymentOutbox.getUuid())
                 .payload(paymentOutbox.getPayload())
                 .paymentOutboxState(paymentOutbox.getPaymentOutboxState())
@@ -80,14 +75,13 @@ public class PaymentOutboxEntity {
                 .build();
     }
 
-    public static PaymentOutbox toDomain(PaymentOutboxEntity entity) {
+    public PaymentOutbox toDomain() {
         return PaymentOutbox.builder()
-                .id(entity.getId())
-                .uuid(entity.getUuid())
-                .payload(entity.getPayload())
-                .paymentOutboxState(entity.getPaymentOutboxState())
-                .createdAt(entity.getCreatedAt())
-                .modifiedAt(entity.getModifiedAt())
+                .uuid(this.getUuid())
+                .payload(this.getPayload())
+                .paymentOutboxState(this.getPaymentOutboxState())
+                .createdAt(this.getCreatedAt())
+                .modifiedAt(this.getModifiedAt())
                 .build();
     }
 }

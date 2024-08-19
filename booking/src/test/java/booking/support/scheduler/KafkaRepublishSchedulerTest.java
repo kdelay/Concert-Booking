@@ -6,8 +6,7 @@ import booking.api.concert.domain.Reservation;
 import booking.api.concert.domain.enums.PaymentState;
 import booking.api.concert.domain.enums.ReservationStatus;
 import booking.api.concert.domain.event.PaymentSuccessEvent;
-import booking.api.concert.domain.message.PaymentMessage;
-import booking.api.concert.domain.message.PaymentMessageOutbox;
+import booking.api.concert.domain.message.PaymentMessageOutboxManager;
 import booking.support.JsonUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,7 +34,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class KafkaRepublishSchedulerTest {
 
     @Autowired
-    public PaymentMessageOutbox paymentMessageOutbox;
+    public PaymentMessageOutboxManager paymentMessageOutboxManager;
 
     @Autowired
     public KafkaTemplate<String, String> kafkaTemplate;
@@ -54,21 +53,19 @@ class KafkaRepublishSchedulerTest {
 
     @Test
     @DisplayName("스케줄러가 동작한 후의 아웃박스 상태는 PUBLISHED 상태여야 한다.")
-    void republishTest() throws InterruptedException {
+    void republishPaymentMessageTest() throws InterruptedException {
         Reservation reservation = new Reservation(1L, 1L, 1L, "Concert 1",
                 LocalDate.parse("2024-08-15"), ReservationStatus.RESERVING, LocalDateTime.now(), null);
         Payment payment = new Payment(1L, 1L, BigDecimal.valueOf(1000), PaymentState.PENDING, LocalDateTime.now(), null);
         String token = "f8d007a8-7459-480d-8434-cd3690763499";
 
-        String uuid = "test";
         PaymentSuccessEvent event = new PaymentSuccessEvent(reservation, payment, token);
-        PaymentMessage<PaymentSuccessEvent> message = new PaymentMessage<>(uuid, event);
-        String payload = JsonUtil.toJson(message);
+        String payload = JsonUtil.toJson(event);
 
         //아웃박스 생성
-        PaymentOutbox paymentOutbox = paymentMessageOutbox.save(message);
+        PaymentOutbox paymentOutbox = paymentMessageOutboxManager.save(event);
         paymentOutbox.setTenMinAgo(); //10분 전 데이터로 설정
-        paymentMessageOutbox.entitySave(paymentOutbox);
+        paymentMessageOutboxManager.entitySave(paymentOutbox);
 
         //카프카 메시지 발행
         kafkaTemplate.send("payment-success", payload).whenComplete((result, exception) -> {
@@ -83,14 +80,13 @@ class KafkaRepublishSchedulerTest {
         assertThat(paymentOutbox.getPaymentOutboxState()).isEqualTo(INIT);
 
         //스케줄러 호출
-        kafkaRepublishScheduler.republish();
+        kafkaRepublishScheduler.republishPaymentMessage();
 
         //5초 대기
         Thread.sleep(5000);
 
         //스케줄러 동작 후 PUBLISHED 상태
-        PaymentOutbox updatedOutbox = paymentMessageOutbox.findByUuid(paymentOutbox.getUuid());
+        PaymentOutbox updatedOutbox = paymentMessageOutboxManager.findByUuid(paymentOutbox.getUuid());
         assertThat(updatedOutbox.getPaymentOutboxState()).isEqualTo(PUBLISHED);
     }
-
 }

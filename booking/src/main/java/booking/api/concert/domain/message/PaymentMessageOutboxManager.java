@@ -6,11 +6,11 @@ import booking.api.concert.domain.event.PaymentSuccessEvent;
 
 import java.util.List;
 
-public interface PaymentMessageOutbox {
+public interface PaymentMessageOutboxManager {
 
-    PaymentOutbox save(PaymentMessage<PaymentSuccessEvent> message);
+    PaymentOutbox save(PaymentSuccessEvent message);
 
-    void complete(PaymentMessage<PaymentSuccessEvent> message);
+    void complete(PaymentSuccessEvent message);
 
     PaymentOutbox findByUuid(String uuid);
 

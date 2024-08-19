@@ -74,8 +74,7 @@ CREATE TABLE IF NOT EXISTS payment (
 -- 결제 아웃박스
 DROP TABLE IF EXISTS payment_outbox;
 CREATE TABLE payment_outbox (
-    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY COMMENT '식별자 PK',
-    uuid VARCHAR(255) NOT NULL COMMENT 'UUID',
+    uuid VARCHAR(255) NOT NULL PRIMARY KEY COMMENT '식별자 PK UUID',
     payload TEXT COMMENT '메시지',
     published_count INT DEFAULT 0 COMMENT '발행 재시도 가능 횟수',
     skipped BOOLEAN DEFAULT FALSE COMMENT '요청 금지 상태',

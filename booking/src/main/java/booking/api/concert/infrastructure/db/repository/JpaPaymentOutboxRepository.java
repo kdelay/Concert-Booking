@@ -8,10 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 
-public interface JpaPaymentOutboxRepository extends JpaRepository<PaymentOutboxEntity, Long> {
-
-    @Query("SELECT po FROM PaymentOutboxEntity po WHERE po.uuid = :uuid")
-    PaymentOutboxEntity findByUuid(@Param("uuid") String uuid);
+public interface JpaPaymentOutboxRepository extends JpaRepository<PaymentOutboxEntity, String> {
 
     @Query("SELECT po FROM PaymentOutboxEntity po WHERE po.paymentOutboxState = :paymentOutboxState")
     List<PaymentOutboxEntity> findAllByStatus(@Param("paymentOutboxState") PaymentOutboxState paymentOutboxState);

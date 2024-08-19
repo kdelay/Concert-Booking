@@ -5,7 +5,7 @@ import booking.api.concert.domain.Reservation;
 import booking.api.concert.domain.enums.PaymentState;
 import booking.api.concert.domain.enums.ReservationStatus;
 import booking.api.concert.domain.event.PaymentSuccessEvent;
-import booking.api.concert.domain.message.PaymentMessage;
+import booking.api.concert.domain.message.PaymentMessageOutboxManager;
 import booking.support.JsonUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.DisplayName;
@@ -26,6 +26,8 @@ import org.testcontainers.utility.DockerImageName;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @SpringBootTest
 @TestPropertySource(
@@ -72,6 +74,9 @@ public class KafkaPublisherTest {
     @Autowired
     public KafkaTemplate<String, String> kafkaTemplate;
 
+    @Autowired
+    public PaymentMessageOutboxManager paymentMessageOutboxManager;
+
     @Test
     @DisplayName("카프카 메시지 발행 성공 테스트")
     public void messageSendTest() {
@@ -81,10 +86,8 @@ public class KafkaPublisherTest {
         Payment payment = new Payment(1L, 1L, BigDecimal.valueOf(1000), PaymentState.PENDING, LocalDateTime.now(), null);
         String token = "f8d007a8-7459-480d-8434-cd3690763499";
 
-        String uuid = "test";
         PaymentSuccessEvent event = new PaymentSuccessEvent(reservation, payment, token);
-        PaymentMessage<PaymentSuccessEvent> message = new PaymentMessage<>(uuid, event);
-        String payload = JsonUtil.toJson(message);
+        String payload = JsonUtil.toJson(event);
 
         kafkaTemplate.send("payment-success", payload).whenComplete((result, exception) -> {
             if (exception != null) {
@@ -93,5 +96,6 @@ public class KafkaPublisherTest {
                 log.info("[Kafka - Send] Payload sent successfully. Payload: {}", payload);
             }
         });
+        assertNotNull(paymentMessageOutboxManager.findAll().get(0));
     }
 }

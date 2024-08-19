@@ -9,7 +9,6 @@ import java.time.LocalDateTime;
 @Getter
 public class PaymentOutbox {
 
-    private final Long id;
     private final String uuid;
     private final String payload;
     private int publishedCount;
@@ -20,10 +19,9 @@ public class PaymentOutbox {
 
     @Builder
     public PaymentOutbox(
-            Long id, String uuid, String payload, int publishedCount, boolean skipped,
+            String uuid, String payload, int publishedCount, boolean skipped,
             PaymentOutboxState paymentOutboxState, LocalDateTime createdAt, LocalDateTime modifiedAt
     ) {
-        this.id = id;
         this.uuid = uuid;
         this.payload = payload;
         this.publishedCount = publishedCount;

@@ -4,5 +4,5 @@ import booking.api.concert.domain.event.PaymentSuccessEvent;
 
 public interface PaymentMessageSender {
 
-    void send(PaymentMessage<PaymentSuccessEvent> message);
+    void send(PaymentSuccessEvent message);
 }

@@ -1,7 +1,6 @@
 package booking.api.concert.infrastructure.kafka;
 
 import booking.api.concert.domain.event.PaymentSuccessEvent;
-import booking.api.concert.domain.message.PaymentMessage;
 import booking.api.concert.domain.message.PaymentMessageSender;
 import booking.support.JsonUtil;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +20,7 @@ public class PaymentKafkaMessageSender implements PaymentMessageSender {
     private String paymentTopic;
 
     @Override
-    public void send(PaymentMessage<PaymentSuccessEvent> message) {
+    public void send(PaymentSuccessEvent message) {
         String payload = JsonUtil.toJson(message);
         kafkaTemplate.send(paymentTopic, payload).whenComplete((result, exception) -> {
             if (exception != null) {

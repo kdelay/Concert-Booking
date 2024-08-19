@@ -1,10 +1,8 @@
 package booking.api.concert.interfaces.event;
 
 import booking.api.concert.application.DataPlatformSendService;
-import booking.api.concert.domain.PaymentOutbox;
 import booking.api.concert.domain.event.PaymentSuccessEvent;
-import booking.api.concert.domain.message.PaymentMessage;
-import booking.api.concert.domain.message.PaymentMessageOutbox;
+import booking.api.concert.domain.message.PaymentMessageOutboxManager;
 import booking.api.concert.domain.message.PaymentMessageSender;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -23,22 +21,19 @@ public class PaymentEventListener {
     private static final Logger logger = LoggerFactory.getLogger(PaymentEventListener.class);
 
     private final DataPlatformSendService sendService;
-    private final PaymentMessageOutbox paymentMessageOutbox;
+    private final PaymentMessageOutboxManager paymentMessageOutboxManager;
     private final PaymentMessageSender paymentMessageSender;
-
-    private PaymentOutbox paymentOutbox = null;
 
     @TransactionalEventListener(phase = BEFORE_COMMIT)
     void createOutboxMessage(PaymentSuccessEvent event) {
-        paymentOutbox = paymentMessageOutbox.save(PaymentMessage.create(event));
+        paymentMessageOutboxManager.save(event);
     }
 
     @Async
     @TransactionalEventListener(phase = AFTER_COMMIT)
     void sendMessage(PaymentSuccessEvent event) {
         logger.info("[Kafka - Listener] event send success = {}", event);
-        String uuid = paymentOutbox.getUuid();
-        paymentMessageSender.send(PaymentMessage.of(uuid, event));
+        paymentMessageSender.send(event);
     }
 
     @Async

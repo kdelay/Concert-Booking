@@ -3,7 +3,7 @@ package booking.api.concert.integration;
 import booking.api.concert.domain.ConcertService;
 import booking.api.concert.domain.PaymentOutbox;
 import booking.api.concert.domain.enums.PaymentOutboxState;
-import booking.api.concert.domain.message.PaymentMessageOutbox;
+import booking.api.concert.domain.message.PaymentMessageOutboxManager;
 import booking.api.concert.interfaces.consumer.PaymentMessageConsumer;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.DisplayName;
@@ -24,7 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class KafkaIntegrationTest {
 
     @Autowired
-    public PaymentMessageOutbox paymentMessageOutbox;
+    public PaymentMessageOutboxManager paymentMessageOutboxManager;
 
     @Autowired
     public ConcertService concertService;
@@ -39,12 +39,13 @@ public class KafkaIntegrationTest {
         String token = "f8d007a8-7459-480d-8434-cd3690763499";
 
         concertService.pay(1L, 1L, token);
-        List<PaymentOutbox> paymentOutboxList = paymentMessageOutbox.findAll();
-        String uuid = paymentOutboxList.get(0).getUuid();
 
         Thread.sleep(2000);
 
-        PaymentOutbox paymentOutbox = paymentMessageOutbox.findByUuid(uuid);
+        List<PaymentOutbox> paymentOutboxList = paymentMessageOutboxManager.findAll();
+        String uuid = paymentOutboxList.get(0).getUuid();
+
+        PaymentOutbox paymentOutbox = paymentMessageOutboxManager.findByUuid(uuid);
         assertThat(paymentOutbox.getPaymentOutboxState()).isEqualTo(PaymentOutboxState.PUBLISHED);
     }
 }

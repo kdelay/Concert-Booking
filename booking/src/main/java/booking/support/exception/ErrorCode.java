@@ -28,7 +28,10 @@ public enum ErrorCode {
     CONCERT_SEAT_IS_NOT_FOUND("좌석 번호가 없습니다."),
 
     //reservation
-    RESERVATION_IS_NOT_FOUND("예약이 존재하지 않습니다");
+    RESERVATION_IS_NOT_FOUND("예약이 존재하지 않습니다"),
+
+    //outbox
+    OUTBOX_IS_NOT_FOUND("해당하는 아웃박스 데이터가 없습니다.");
 
     private final String msg;
 }
