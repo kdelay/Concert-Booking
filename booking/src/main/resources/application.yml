@@ -35,5 +35,22 @@ spring:
         core-size: 5
         max-size: 10
         queue-capacity: 25
+
 payment:
   topic-name: "payment-success"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: 'prometheus'
+  endpoint:
+    prometheus:
+      enabled: true
+  metrics:
+    enable:
+      jvm:
+        #JVM 메트릭 활성화
+        thread:
+          #스레드 메트릭 활성화
+          enabled: true
