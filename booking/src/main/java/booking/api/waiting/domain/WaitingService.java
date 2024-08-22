@@ -30,10 +30,10 @@ public class WaitingService {
      */
     public WaitingToken getWaiting(String reqToken) {
 
-        String token = reqToken.substring(7);
+        String token = null;
 
         //신규 토큰 발급
-        if (!waitingTokenRepository.findWaitingQueue(token)) {
+        if (reqToken == null || !waitingTokenRepository.findWaitingQueue(reqToken.substring(7))) {
             token = waitingTokenRepository.addWaitingQueue();
             return this.getWaitingInfo(token);
         }
