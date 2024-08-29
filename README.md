@@ -1,71 +1,63 @@
-# Concert-Reservation
-```
-🎸 콘서트 예약 서비스
-```
+# 🎸 콘서트 예약 서비스
+
+## 📄 Documents
+- [비즈니스 로직 중 발생 가능한 동시성 이슈 파악](https://github.com/kdelay/Concert-Booking/wiki/%EB%B9%84%EC%A6%88%EB%8B%88%EC%8A%A4-%EB%A1%9C%EC%A7%81-%EC%A4%91-%EB%B0%9C%EC%83%9D-%EA%B0%80%EB%8A%A5%ED%95%9C-%EB%8F%99%EC%8B%9C%EC%84%B1-%EC%9D%B4%EC%8A%88-%ED%8C%8C%EC%95%85)
+- [대기열 Redis 이관 및 Cache Service 도입](https://cojyeon.tistory.com/320)
+- [부하를 적절하게 축소하기 위한 방안 고려](https://github.com/kdelay/Concert-Booking/wiki/%EB%B6%80%ED%95%98%EB%A5%BC-%EC%A0%81%EC%A0%88%ED%95%98%EA%B2%8C-%EC%B6%95%EC%86%8C%ED%95%98%EA%B8%B0-%EC%9C%84%ED%95%9C-%EB%B0%A9%EC%95%88-%EA%B3%A0%EB%A0%A4)
+- [MSA 서비스 분리 확장 설계](https://github.com/kdelay/Concert-Booking/wiki/MSA-%EC%84%9C%EB%B9%84%EC%8A%A4-%EB%B6%84%EB%A6%AC-%ED%99%95%EC%9E%A5-%EC%84%A4%EA%B3%84)
+- [부하 테스트](https://github.com/kdelay/Concert-Booking/wiki/%EB%B6%80%ED%95%98-%ED%85%8C%EC%8A%A4%ED%8A%B8)
 
 ## ✏️ Description
-- `콘서트 예약 서비스`를 구현해 봅니다.
-- 대기열 시스템을 구축하고, 예약 서비스는 작업가능한 유저만 수행할 수 있도록 해야합니다.
-- 사용자는 좌석예약 시에 미리 충전한 잔액을 이용합니다.
-- 좌석 예약 요청시에, 결제가 이루어지지 않더라도 일정 시간동안 다른 유저가 해당 좌석에 접근할 수 없도록 합니다.
+- 대기열 시스템을 통해 유입 트래픽을 관리할 수 있다.
+- 예약 서비스는 토큰이 있는 유저만 수행할 수 있다.
+- 좌석 예약 요청 시, 결제가 이루어지지 않더라도 일정 시간동안 다른 유저가 해당 좌석에 접근할 수 없도록 한다.
+- 결제 시, 사용자는 미리 충전한 잔액을 이용한다.
 
-## 📝 Requirements
-- 아래 5가지 API 를 구현합니다.
-    - 유저 토큰 발급 API
-    - 예약 가능 날짜 / 좌석 API
-    - 좌석 예약 요청 API
-    - 잔액 충전 / 조회 API
-    - 결제 API
-- 각 기능 및 제약사항에 대해 단위 테스트를 반드시 하나 이상 작성하도록 합니다.
-- 다수의 인스턴스로 어플리케이션이 동작하더라도 기능에 문제가 없도록 작성하도록 합니다.
-- 동시성 이슈를 고려하여 구현합니다.
-- 대기열 개념을 고려해 구현합니다.
+## 📝 API
+- 대기열 토큰 등록 및 조회 API
+- 콘서트 목록 조회 API
+- 콘서트 일정 목록 조회 API
+- 콘서트 좌석 목록 조회 API
+- 콘서트 예약 요청 API
+- 콘서트 좌석 결제 API
 
-## 🔑 API Specs
-1️⃣ **`주요` 유저 대기열 토큰 기능**
-- 서비스를 이용할 토큰을 발급받는 API를 작성합니다.
-- 토큰은 유저의 UUID 와 해당 유저의 대기열을 관리할 수 있는 정보 ( 대기 순서 or 잔여 시간 등 ) 를 포함합니다.
-- 이후 모든 API 는 위 토큰을 이용해 대기열 검증을 통과해야 이용 가능합니다.
+### 🔑 API Specs
+1️⃣ **유저 대기열 토큰 기능**
+- 서비스를 이용할 토큰을 발급받는 API 를 작성한다.
+- 토큰은 유저의 UUID 와 해당 유저의 대기열을 관리할 수 있는 정보 ( 대기 순서 or 잔여 시간 등 ) 를 포함한다.
+- 이후 모든 API 는 위 토큰을 이용해 대기열 검증을 통과해야 이용 가능하다.
 
-> 기본적으로 폴링으로 본인의 대기열을 확인한다고 가정하며, 다른 방안 또한 고려해보고 구현해 볼 수 있습니다.
+> 기본적으로 폴링으로 본인의 대기열을 확인한다고 가정한다.
 
-**2️⃣ `기본` 예약 가능 날짜 / 좌석 API**
-- 예약가능한 날짜와 해당 날짜의 좌석을 조회하는 API 를 각각 작성합니다.
-- 예약 가능한 날짜 목록을 조회할 수 있습니다.
-- 날짜 정보를 입력받아 예약가능한 좌석정보를 조회할 수 있습니다.
+2️⃣ **콘서트 날짜 / 좌석 API**
+- 콘서트 날짜와 해당 날짜의 좌석을 조회하는 API 를 각각 작성한다.
+- 콘서트 날짜 목록을 조회할 수 있다.
+- 날짜 정보를 입력받아 예약 가능한 좌석 정보를 조회할 수 있다.
 
-> 좌석 정보는 1 ~ 50 까지의 좌석번호로 관리됩니다.
+> 좌석 정보는 1 ~ 50 까지의 좌석 번호로 관리된다.
 
-3️⃣ **`주요` 좌석 예약 요청 API**
-- 날짜와 좌석 정보를 입력받아 좌석을 예약 처리하는 API 를 작성합니다.
-- 좌석 예약과 동시에 해당 좌석은 그 유저에게 약 5분간 임시 배정됩니다. ( 시간은 정책에 따라 자율적으로 정의합니다. )
-- 만약 배정 시간 내에 결제가 완료되지 않는다면 좌석에 대한 임시 배정은 해제되어야 하며 다른 사용자는 예약할 수 없어야 한다.
+3️⃣ **콘서트 좌석 예약 요청 API**
+- 날짜와 좌석 정보를 입력 받아 좌석을 예약 처리하는 API 를 작성한다.
+- 좌석 예약과 동시에 해당 좌석은 그 유저에게 약 5분간 임시 배정된다.
+- 만약 배정 시간 내에 결제가 완료되지 않는다면, 좌석에 대한 임시 배정은 해제되어야 하며 다른 사용자는 예약할 수 있어야 한다.
 
-4️⃣ **`기본`**  **잔액 충전 / 조회 API**
-- 결제에 사용될 금액을 API 를 통해 충전하는 API 를 작성합니다.
-- 사용자 식별자 및 충전할 금액을 받아 잔액을 충전합니다.
-- 사용자 식별자를 통해 해당 사용자의 잔액을 조회합니다.
+4️⃣ **유저 잔액 충전 / 조회 API**
+- 결제에 사용될 금액을 API 를 통해 충전하는 API 를 작성한다.
+- 사용자 식별자 및 충전할 금액을 받아 잔액을 충전한다.
+- 사용자 식별자를 통해 해당 사용자의 잔액을 조회한다.
 
-5️⃣ **`주요` 결제 API**
-- 결제 처리하고 결제 내역을 생성하는 API 를 작성합니다.
-- 결제가 완료되면 해당 좌석의 소유권을 유저에게 배정하고 대기열 토큰을 만료시킵니다.
+5️⃣ **결제 API**
+- 결제 처리하고 결제 내역을 생성하는 API 를 작성한다.
+- 결제가 완료되면 해당 좌석의 소유권을 유저에게 배정하고 대기열 토큰을 만료시킨다.
 
 💡 **KEY POINT**
-- 유저간 대기열을 요청 순서대로 정확하게 제공할 방법을 고민해 봅니다.
-- 동시에 여러 사용자가 예약 요청을 했을 때, 좌석이 중복으로 배정 가능하지 않도록 합니다.
+- 유저 간 대기열 요청을 순서대로 정확하게 어떻게 제공할 것인가?
+- 동시에 여러 사용자가 예약 요청을 했을 때, 좌석이 중복으로 배정 가능하지 않도록 해야 한다.
 
-### 💠 API 명세
-- `Endpoint` - API 의 URL 및 기능을 설명할 수 있는 적절한 HTTP Method
-- `Request` - Param, Query, Body 등 API 호출 시 전달되어야 할 매개변수 및 데이터
-- `Response` - API 의 응답 코드, 데이터 등에 대한 명세 및 적절한 예제
-- `Error` - API 호출 중 발생할 수 있는 예외 케이스에 대해 명시
-- `Authorization` - 필요한 인증, 권한에 대해서도 명시
-![image](https://github.com/user-attachments/assets/bc001b4d-f9cb-4b15-aa33-0041923f53fd)
-
+---
 
 ## 📆 Milestone
-![image](https://github.com/kdelay/Concert-Booking/assets/90545043/dfc79bae-82fc-4c7f-b9c8-21c051061093)
-
+https://github.com/users/kdelay/projects/7/views/4
 
 ## 📊 ERD Diagram
 ```mermaid
@@ -277,37 +269,64 @@ sequenceDiagram
     end
 ```
 
-# Tree
+---
+
+# 🌲 Tree
 ```text
 ├── api
 │   ├── concert
+│   │   ├── application
+│   │   │   └── DataPlatformSendService.java
 │   │   ├── domain
 │   │   │   ├── Concert.java
 │   │   │   ├── ConcertRepository.java
 │   │   │   ├── ConcertSchedule.java
 │   │   │   ├── ConcertSeat.java
 │   │   │   ├── ConcertService.java
+│   │   │   ├── MockApiClient.java
 │   │   │   ├── Payment.java
+│   │   │   ├── PaymentOutbox.java
 │   │   │   ├── Reservation.java
-│   │   │   └── enums
-│   │   │       ├── ConcertSeatStatus.java
-│   │   │       ├── PaymentState.java
-│   │   │       └── ReservationStatus.java
+│   │   │   ├── enums
+│   │   │   │   ├── ConcertSeatStatus.java
+│   │   │   │   ├── PaymentOutboxState.java
+│   │   │   │   ├── PaymentState.java
+│   │   │   │   └── ReservationStatus.java
+│   │   │   ├── event
+│   │   │   │   ├── PaymentEventPublisher.java
+│   │   │   │   └── PaymentSuccessEvent.java
+│   │   │   └── message
+│   │   │       ├── PaymentMessageOutboxManager.java
+│   │   │       └── PaymentMessageSender.java
 │   │   ├── infrastructure
-│   │   │   ├── ConcertEntity.java
 │   │   │   ├── ConcertMapper.java
-│   │   │   ├── ConcertRepositoryImpl.java
-│   │   │   ├── ConcertScheduleEntity.java
-│   │   │   ├── ConcertSeatEntity.java
-│   │   │   ├── JpaConcertRepository.java
-│   │   │   ├── JpaConcertScheduleRepository.java
-│   │   │   ├── JpaConcertSeatRepository.java
-│   │   │   ├── JpaPaymentRepository.java
-│   │   │   ├── JpaReservationRepository.java
-│   │   │   ├── PaymentEntity.java
-│   │   │   └── ReservationEntity.java
-│   │   └── presentation
+│   │   │   ├── MockApiClientImpl.java
+│   │   │   ├── db
+│   │   │   │   ├── ConcertEntity.java
+│   │   │   │   ├── ConcertScheduleEntity.java
+│   │   │   │   ├── ConcertSeatEntity.java
+│   │   │   │   ├── PaymentEntity.java
+│   │   │   │   ├── PaymentOutboxEntity.java
+│   │   │   │   ├── ReservationEntity.java
+│   │   │   │   └── repository
+│   │   │   │       ├── ConcertRepositoryImpl.java
+│   │   │   │       ├── JpaConcertRepository.java
+│   │   │   │       ├── JpaConcertScheduleRepository.java
+│   │   │   │       ├── JpaConcertSeatRepository.java
+│   │   │   │       ├── JpaPaymentOutboxRepository.java
+│   │   │   │       ├── JpaPaymentRepository.java
+│   │   │   │       ├── JpaReservationRepository.java
+│   │   │   │       └── PaymentMessageOutboxManagerImpl.java
+│   │   │   ├── kafka
+│   │   │   │   └── PaymentKafkaMessageSender.java
+│   │   │   └── spring
+│   │   │       └── PaymentSpringEventPublisher.java
+│   │   └── interfaces
 │   │       ├── ConcertController.java
+│   │       ├── consumer
+│   │       │   └── PaymentMessageConsumer.java
+│   │       ├── event
+│   │       │   └── PaymentEventListener.java
 │   │       ├── request
 │   │       │   ├── BookingSeatsRequest.java
 │   │       │   └── PayRequest.java
@@ -317,36 +336,45 @@ sequenceDiagram
 │   │           ├── SearchPaymentResponse.java
 │   │           ├── SearchScheduleResponse.java
 │   │           └── SearchSeatsResponse.java
+│   ├── user
+│   │   ├── domain
+│   │   │   ├── User.java
+│   │   │   ├── UserRepository.java
+│   │   │   └── UserService.java
+│   │   ├── infrastructure
+│   │   │   ├── JpaUserRepository.java
+│   │   │   ├── UserEntity.java
+│   │   │   └── UserRepositoryImpl.java
+│   │   └── interfaces
+│   │       ├── ChargeRequest.java
+│   │       ├── ChargeResponse.java
+│   │       ├── SearchAmountResponse.java
+│   │       └── UserController.java
 │   └── waiting
 │       ├── domain
-│       │   ├── User.java
-│       │   ├── UserService.java
+│       │   ├── WaitingService.java
 │       │   ├── WaitingToken.java
 │       │   ├── WaitingTokenRepository.java
-│       │   ├── WaitingTokenService.java
-│       │   └── WaitingTokenStatus.java
+│       │   └── enums
+│       │       └── WaitingTokenStatus.java
 │       ├── infrastructure
-│       │   ├── JpaUserRepository.java
-│       │   ├── JpaWaitingTokenRepository.java
-│       │   ├── UserEntity.java
-│       │   ├── UserMapper.java
-│       │   ├── WaitingTokenEntity.java
-│       │   ├── WaitingTokenMapper.java
+│       │   ├── RedisLockRepository.java
 │       │   └── WaitingTokenRepositoryImpl.java
-│       └── presentation
-│           ├── ChargeRequest.java
-│           ├── ChargeResponse.java
-│           ├── SearchAmountResponse.java
-│           ├── UserController.java
-│           ├── WaitingTokenController.java
-│           ├── WaitingTokenRequest.java
-│           └── WaitingTokenResponse.java
+│       └── interfaces
+│           ├── TokenResponse.java
+│           ├── WaitingController.java
+│           └── event
 └── support
-    ├── Authorization.java
-    ├── FilterConfig.java
+    ├── JsonUtil.java
     ├── LoggingFilter.java
-    ├── TokenInterceptor.java
-    ├── WebMvcConfig.java
+    ├── WaitingInterceptor.java
+    ├── config
+    │   ├── AsyncConfig.java
+    │   ├── FilterConfig.java
+    │   ├── KafkaConfig.java
+    │   ├── RedisCacheConfig.java
+    │   ├── RedisConfig.java
+    │   └── WebMvcConfig.java
     ├── exception
     │   ├── BaseException.java
     │   ├── CustomBadRequestException.java
@@ -356,165 +384,11 @@ sequenceDiagram
     ├── handler
     │   ├── ApiControllerAdvice.java
     │   ├── ApiResultResponse.java
-    │   └── ErrorResponse.java
+    │   ├── ErrorResponse.java
+    │   ├── LockHandler.java
+    │   └── TransactionHandler.java
     └── scheduler
         ├── ConcertSeatScheduler.java
+        ├── KafkaRepublishScheduler.java
         └── WaitingTokenScheduler.java
-
 ```
-
-# 비즈니스 로직 중 발생 가능한 동시성 이슈 파악
-- 토큰 활성화(ACTIVATE)
-- 콘서트 좌석 점유 및 예약
-- 결제(유저 잔액 사용)
-- 유저 잔액 충전
-
-# 동시성 제어 방식 도입
-- `성능`: 속도
-- `사용성 측면` -> 개발 측면
-	- 불편한 부분
-	- 중앙화에서 관리 가능 여부
-	- 재사용성 있는 코드
-- `데이터의 정합성`
-	- 락 구현 이유: lock 보장함으로써 data 정합성 보장
-- `데드락` 발생 방지 필요(비관적 락)
-- `예외 사항`에 따른 처리 편의성
-
----
-
-## 토큰 활성화(ACTIVATE)
-### 기존 비즈니스 기반 로직에서 필요한 lock 체크
-- 유저 정보 조회 [x] 
-- 콘서트 정보 조회 [x]
-- 만료되지 않은 대기열 토큰 정보 조회 [x]
-- 대기열 토큰 정보가 없는 경우 새로운 토큰 발급 [x] - unique key
-- 대기열 토큰 정보가 있는 경우 입장 가능 시간 확인하고 토큰 상태 변경해서 정보 반환 [o] - version
-
-### 고려사항
-- 새로운 토큰 발급 실패할 케이스 없음
-- 사용자가 토큰이 있는 상태에서 동시에 상태 변경하려고 접근할 수 있음 
-	- 다만 충돌 적으므로 `낙관적 락` 고려
-
-### 시스템 입장 로직 transaction 묶기
-```
-Tx {
-	- 토큰이 있는 경우, 입장 가능 시 토큰 상태 ACTIVATE 로 변경
-}
-```
-
-
-## 콘서트 좌석 점유 및 예약
-### 기존 비즈니스 기반 로직에서 필요한 lock 체크
-- 콘서트 모든 목록 조회 [x]
-- 콘서트 정보 조회 [x]
-- 콘서트 날짜 정보 조회 [x]
-- 날짜와 일치하는 콘서트 날짜 정보 조회 [x]
-- 날짜와 일치하는 예약 가능한 콘서트 좌석 조회 [x]
-- 예약 시, 예약하고자 하는 좌석 리스트 조회 [o] - version -> redis
-	- n번째 좌석 동시 요청 후 좌석 상태 값 변경
-		- A:0 -> X
-		- B:0 -> 1
-		- C:0 -> X
-- 좌석 임시 배정 상태로 변경 [x]
-- 컬럼 유저 PK 및 modifiedAt 업데이트 [x]
-
-### 고려사항
-- 예약 가능한 좌석 리스트 조회
-- 좌석이 임시 배정 상태로 변경
-- 좌석의 user_id 컬럼에 점유한 유저의 PK 를 업데이트
-- 예약과 결제 데이터가 모두 추가되어야 한다.
-- 다른 유저는 예약 불가 상태
-- n분 동안 결제를 완료해야 한다.
-- `낙관적 락`으로 버전 관리를 하면서 다른 사용자가 좌석을 점유할 수 없도록 한다.
-
-### 시스템 입장 로직 transaction 묶기
-```
-Tx {
-	- 예약하고자 하는 좌석 리스트 조회
-	- 좌석 상태 변경(TEMPORARY)
-	- 컬럼 유저 PK 및 modifiedAt 업데이트
-	- 예약 정보 insert(RESERVING)
-	- 결제 정보 insert(PENDING)
-}
-```
-
-
-## 토큰 만료
-### 기존 비즈니스 기반 로직에서 필요한 lock 체크
-- 예약 진행 중인 상태의 예약 데이터 조회 [x]
-- 시간 내 결제 미완료 [x]
-- 상태 변경 [x]
-
-### 고려사항
-- scheduler 를 통해 시간 내 결제가 완료되지 않을 경우 진행된다.
-- transaction 으로 묶어서 한 단위 안에 실행될 수 있도록 한다.
-
-### 시스템 입장 로직 transaction 묶기
-```
-Tx {
-	- 좌석 상태 변경(AVAILABLE)
-	- 예약 상태 변경(CANCELED)
-	- 결제 상태 변경(CANCELED)
-	- 토큰 상태 변경(EXPIRED)
-}
-```
-
-
-## 결제(유저 잔액 사용)
-### 기존 비즈니스 기반 로직에서 필요한 lock 체크
-- 예약 정보 조회 [x]
-- 유저 잔액 조회 [x]
-- 유저 잔액에서 결제 금액 차감 [o] - lock
-  
-### 고려사항
-- 잔액 차감은 `비관적 락`으로 설정한다.
-	- 유저가 잔액을 차감할 동안 다른 행동을 할 가능성이 적다.
-- transaction 으로 묶어서 한 단위 안에 실행될 수 있도록 한다.
-
-### 시스템 입장 로직 transaction 묶기
-```
-Tx {
-	- 유저 잔액에서 결제 금액 차감
-	- 결제 상태 변경(COMPLETED)
-	- 예약 상태 변경(RESERVED)
-	- 좌석 상태 변경(RESERVED)
-}
-```
-
-
-## 유저 잔액 충전
-### 기존 비즈니스 기반 로직에서 필요한 lock 체크
-- 유저 조회 [x]
-- 잔액 충전 [o] - lock
-
-### 고려사항
-- 잔액 충전 시 따닥 이슈를 고려하여 `비관적 락` 설정
-
-### 시스템 입장 로직 transaction 묶기
-```
-Tx {
-	- 유저 조회
-	- 잔액 충전
-}
-```
-
----
-
-## 낙관적 락
-#### 구현의 복잡도 및 효율성
-Entity 에 @Version 어노테이션이 있는 version 필드를 만든 후, DB 에 version 컬럼을 추가해야 한다.
-Entity 와 Domain 을 분리했으므로 Domain 에도 version 필드가 존재한다.
-리팩토링 하면서 새로 낙관적 락을 도입할 때 version 을 모두 만들어야 해서 번거로운 단점이 있다.
-
----
-## 비관적 락
-### 구현의 복잡도 및 효율성
-Lock 이 필요한 쿼리에 @Lock 어노테이션을 붙여서 비관적 락을 설정한다.
-낙관적 락보다는 구현이 쉬운 편이다.
-LockModeType 를 통해 읽기와 쓰기 둘다 불가능한 배타락과, 쓰기만 불가능한 공유락을 구분해서 설정할 수 있다.
-### 성능
-DB 에 접근한 사용자가 트랜잭션이 끝날 때까지 Lock 을 점유하고 있기 때문에 뒤에 대기자는 Lock 을 점유하고 있는 사용자가 작업을 마칠 때까지 무한정 기다리는 성능적 이슈가 발생할 수 있다.
-
----
-# 대기열 Redis 이관 및 Cache Service 도입
-[Tistory](https://cojyeon.tistory.com/320)
